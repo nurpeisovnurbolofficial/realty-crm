@@ -39,7 +39,10 @@ class ClientViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         if getattr(self, 'swagger_fake_view', False):  # schema generation has no logged-in user
             return Client.objects.none()
-        return services.visible_clients(self.request.user).annotate(deals_count=Count('deals'))
+        user = self.request.user
+        # Count only the deals this user can see, so the number matches the list inside the client card.
+        visible = Q() if user.is_head else Q(deals__owner=user)
+        return services.visible_clients(user).annotate(deals_count=Count('deals', filter=visible))
 
     def perform_create(self, serializer):
         serializer.save(owner=serializer.validated_data.get('owner', self.request.user))
@@ -187,6 +190,13 @@ class TaskViewSet(viewsets.ModelViewSet):
     def reopen(self, request, pk=None):
         task = services.set_task_done(self.get_object(), request.user, done=False)
         return Response(self.get_serializer(task).data)
+
+    @extend_schema(responses={200: dict}, description='Number of tasks in each tab: overdue, today, upcoming, done.')
+    @action(detail=False, methods=['get'])
+    def summary(self, request):
+        tasks = self.get_queryset()
+        task_filter = TaskFilter()
+        return Response({when: task_filter.filter_when(tasks, 'when', when).count() for when in TaskFilter.WHEN_VALUES})
 
 
 class DashboardView(APIView):

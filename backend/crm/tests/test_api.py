@@ -346,3 +346,38 @@ class QueryCountTests(ApiTestCase):
         self._fill(15)
         large = {url: self._count(url) for url in urls}
         self.assertEqual(small, large)
+
+
+class TaskSummaryTests(ApiTestCase):
+    def test_counts_per_tab_respect_visibility(self):
+        now = timezone.now()
+        Task.objects.create(title='Late', assignee=self.manager, due_at=now - timedelta(days=1))
+        Task.objects.create(title='Later', assignee=self.manager, due_at=now + timedelta(days=3))
+        Task.objects.create(title='Done', assignee=self.manager, due_at=now, is_done=True, completed_at=now)
+        Task.objects.create(title='Foreign', assignee=self.other, due_at=now - timedelta(days=1))
+        self.login(self.manager)
+        data = self.client.get('/api/tasks/summary/').data
+        self.assertEqual(data, {'overdue': 1, 'today': 0, 'upcoming': 1, 'done': 1})
+
+
+class ClientDealsCountTests(ApiTestCase):
+    def test_deals_count_includes_only_visible_deals(self):
+        client = f.client(self.manager)
+        f.deal(self.manager, client_obj=client)
+        f.deal(self.other, client_obj=client)  # e.g. the head gave a deal of this client to a colleague
+        self.login(self.manager)
+        self.assertEqual(self.client.get('/api/clients/').data['results'][0]['deals_count'], 1)
+        self.login(self.head)
+        self.assertEqual(self.client.get('/api/clients/').data['results'][0]['deals_count'], 2)
+
+
+class SpaRoutingTests(APITestCase):
+    def test_missing_asset_is_404_not_the_react_page(self):
+        # After a deploy an old browser tab may ask for a deleted file; HTML instead of 404 would break the page.
+        with tempfile.TemporaryDirectory() as dist:
+            Path(dist, 'index.html').write_text('<div id="root"></div>')
+            with override_settings(FRONTEND_DIST=Path(dist)):
+                self.assertEqual(APIClient().get('/assets/OldPage-abc123.js').status_code, 404)
+                response = APIClient().get('/clients')
+                self.assertEqual(response.status_code, 200)
+                response.close()

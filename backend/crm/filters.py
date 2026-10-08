@@ -32,10 +32,9 @@ class DealFilter(django_filters.FilterSet):
 class TaskFilter(django_filters.FilterSet):
     """?when=overdue|today|upcoming|done — the tabs on the Tasks page."""
 
-    when = django_filters.ChoiceFilter(
-        method='filter_when',
-        choices=[('overdue', 'Overdue'), ('today', 'Today'), ('upcoming', 'Upcoming'), ('done', 'Done')],
-    )
+    WHEN_VALUES = ['overdue', 'today', 'upcoming', 'done']
+
+    when = django_filters.ChoiceFilter(method='filter_when', choices=[(value, value.title()) for value in WHEN_VALUES])
 
     class Meta:
         model = Task

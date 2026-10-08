@@ -252,18 +252,20 @@ class Command(BaseCommand):
         def take_property():
             return free.pop()
 
-        def client():
-            return rng.choice(clients)
+        def client(owner):
+            # A manager works with their own clients, as in a real agency.
+            return rng.choice([c for c in clients if c.owner_id == owner.id])
 
         # Closed won: spread over the last six months, so the dashboard chart has history.
         for i in range(11):
             close = 1 + i * 15 + rng.randint(0, 4)  # the first ones close this month
-            self._deal(client=client(), prop=take_property(), owner=managers[i % 3], stage=Deal.Stage.WON,
+            owner = managers[i % 3]
+            self._deal(client=client(owner), prop=take_property(), owner=owner, stage=Deal.Stage.WON,
                        days_ago=close + rng.randint(10, 35), close_days_ago=close)  # fmt: skip
         # Lost deals.
         for i in range(6):
             close = 5 + i * 14
-            self._deal(client=client(), prop=rng.choice(properties), owner=managers[(i + 1) % 3],
+            self._deal(client=client(managers[(i + 1) % 3]), prop=rng.choice(properties), owner=managers[(i + 1) % 3],
                        stage=Deal.Stage.LOST, days_ago=close + rng.randint(7, 25), close_days_ago=close,
                        lost_reason=rng.choice(LOST_REASONS))  # fmt: skip
         # Active pipeline.
@@ -273,7 +275,13 @@ class Command(BaseCommand):
         for i, stage in enumerate(active_plan):
             prop = None if stage in (Deal.Stage.NEW, Deal.Stage.CONTACTED) and rng.random() < 0.6 else take_property()
             active.append(
-                self._deal(client=client(), prop=prop, owner=managers[i % 3], stage=stage, days_ago=rng.randint(1, 30))
+                self._deal(
+                    client=client(managers[i % 3]),
+                    prop=prop,
+                    owner=managers[i % 3],
+                    stage=stage,
+                    days_ago=rng.randint(1, 30),
+                )
             )
 
         # Tasks: some overdue, some for today, some later, some done.

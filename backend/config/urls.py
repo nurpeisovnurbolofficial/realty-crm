@@ -23,6 +23,7 @@ urlpatterns = [
     path('api/', include(router.urls)),
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger'),
-    # Everything else is a page of the React app.
-    re_path(r'^(?!api/|admin/|static/).*$', views.spa, name='spa'),
+    # Everything else is a page of the React app. A missing file in /assets/ must stay a 404:
+    # answering with index.html would break an old browser tab after a deploy (see lazyPage in App.tsx).
+    re_path(r'^(?!api/|admin/|static/|assets/).*$', views.spa, name='spa'),
 ]
