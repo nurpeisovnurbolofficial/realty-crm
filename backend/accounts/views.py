@@ -135,4 +135,5 @@ class UserListView(generics.ListAPIView):
 
     serializer_class = UserSerializer
     pagination_class = None
-    queryset = User.objects.filter(is_active=True).order_by('first_name', 'username')
+    # Technical superusers (e.g. `admin`) are not agency employees: hide them from dropdowns.
+    queryset = User.objects.filter(is_active=True, is_superuser=False).order_by('first_name', 'username')

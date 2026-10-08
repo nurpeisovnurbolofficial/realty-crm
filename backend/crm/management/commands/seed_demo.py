@@ -207,18 +207,23 @@ class Command(BaseCommand):
         )
         Deal.objects.filter(pk=deal.pk).update(created_at=created, updated_at=closed or created, closed_at=closed)
 
-        Activity.objects.create(deal=deal, author=owner, kind=Activity.Kind.CREATED)
+        # History with realistic timestamps: from the creation date up to the close date (or now).
         order = Deal.Stage.values
         path = (
             order[: order.index(stage) + 1] if stage != Deal.Stage.LOST else order[: self.rng.randint(1, 4)] + ['lost']
         )
-        for previous, current in zip(path, path[1:], strict=False):
-            Activity.objects.create(
-                deal=deal, author=owner, kind=Activity.Kind.STAGE, data={'from': previous, 'to': current},
-                text=lost_reason if current == 'lost' else '',
-            )  # fmt: skip
+        end = closed or self.now - timedelta(hours=self.rng.randint(1, 20))
+        events = [(Activity.Kind.CREATED, {}, '')]
+        events += [
+            (Activity.Kind.STAGE, {'from': prev, 'to': cur}, lost_reason if cur == 'lost' else '')
+            for prev, cur in zip(path, path[1:], strict=False)
+        ]
         if self.rng.random() < 0.6:
-            Activity.objects.create(deal=deal, author=owner, kind=Activity.Kind.NOTE, text=self.rng.choice(NOTES))
+            events.insert(self.rng.randint(1, len(events)), (Activity.Kind.NOTE, {}, self.rng.choice(NOTES)))
+        step = (end - created) / max(len(events) - 1, 1)
+        for index, (kind, data, text) in enumerate(events):
+            activity = Activity.objects.create(deal=deal, author=owner, kind=kind, data=data, text=text)
+            Activity.objects.filter(pk=activity.pk).update(created_at=created + step * index)
 
         if prop and stage == Deal.Stage.CONTRACT:
             prop.status = Property.Status.RESERVED
@@ -243,7 +248,7 @@ class Command(BaseCommand):
 
         # Closed won: spread over the last six months, so the dashboard chart has history.
         for i in range(11):
-            close = 6 + i * 15 + rng.randint(0, 6)
+            close = 1 + i * 15 + rng.randint(0, 4)  # the first ones close this month
             self._deal(client=client(), prop=take_property(), owner=managers[i % 3], stage=Deal.Stage.WON,
                        days_ago=close + rng.randint(10, 35), close_days_ago=close)  # fmt: skip
         # Lost deals.
