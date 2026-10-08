@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    # Tests run against a real PostgreSQL, the same database as in production.
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: realty
+          POSTGRES_USER: realty
+          POSTGRES_PASSWORD: realty
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U realty"
+          --health-interval 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgres://realty:realty@localhost:5432/realty
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: backend/requirements*.txt
+      - run: pip install -r requirements-dev.txt
+      - name: Lint
+        run: ruff check . && ruff format --check .
+      - run: python manage.py check
+      - run: python manage.py makemigrations --check --dry-run
+      - name: Validate OpenAPI schema
+        run: python manage.py spectacular --validate --fail-on-warn --file /dev/null
+      - run: python manage.py test
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - name: Lint and format
+        run: npm run lint && npm run format:check
+      - name: Type check
+        run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Build Docker image
+        run: docker build -t realty-crm .
