@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router-dom'
 
 import { useProperties, useProperty, usePropertyCrud } from '../api/hooks'
+import { useAuth } from '../auth/context'
 import {
   type DealType,
   type District,
@@ -70,6 +71,7 @@ function initialPropertyForm(property: Property | null) {
 
 function PropertyForm({ property, onClose }: { property: Property | null; onClose: () => void }) {
   const { t } = useTranslation()
+  const { user } = useAuth()
   const { save, remove } = usePropertyCrud()
   const toast = useToast()
   const errorText = useErrorText()
@@ -127,7 +129,7 @@ function PropertyForm({ property, onClose }: { property: Property | null; onClos
           </Button>
         ) : (
           <>
-            {property && (
+            {property && !user?.demo_mode && (
               <Button
                 variant="danger"
                 className="mr-auto"

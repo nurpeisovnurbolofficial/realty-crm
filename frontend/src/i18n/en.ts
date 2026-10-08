@@ -27,6 +27,8 @@ export const en = {
     next: 'Next',
     notFound: 'Page not found',
     toHome: 'Go to dashboard',
+    demo: 'Demo',
+    demoHint: 'Public demo: the data is reset automatically and deleting is disabled.',
   },
   nav: {
     dashboard: 'Dashboard',
@@ -99,6 +101,9 @@ export const en = {
     http_403: 'You do not have permission to do this.',
     http_404: 'Not found.',
     http_429: 'Too many attempts. Please wait a minute.',
+    demo_readonly: 'Deleting is disabled in the public demo.',
+    property_in_use: 'The property is used in open deals: its deal type cannot change.',
+    invalid_filter: 'Invalid filter value.',
   },
   dashboard: {
     title: 'Dashboard',

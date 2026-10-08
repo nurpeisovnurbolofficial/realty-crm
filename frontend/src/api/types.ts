@@ -32,6 +32,7 @@ export interface User {
   display_name: string
   role: Role
   is_head: boolean
+  demo_mode: boolean
 }
 
 export interface UserShort {

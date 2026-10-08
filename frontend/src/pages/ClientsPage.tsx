@@ -97,7 +97,7 @@ function ClientForm({ client, onClose }: { client: Client | null; onClose: () =>
       wide
       footer={
         <>
-          {client && (
+          {client && !user?.demo_mode && (
             <Button
               variant="danger"
               className="mr-auto"

@@ -133,6 +133,14 @@ export function Layout() {
           <Logo />
         </div>
         <div className="ml-auto flex items-center gap-3">
+          {user?.demo_mode && (
+            <span
+              title={t('common.demoHint')}
+              className="hidden rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-800 sm:inline"
+            >
+              {t('common.demo')}
+            </span>
+          )}
           <LanguageSwitch />
           {user && (
             <div className="flex items-center gap-2">

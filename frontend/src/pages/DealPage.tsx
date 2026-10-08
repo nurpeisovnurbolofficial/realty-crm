@@ -4,6 +4,7 @@ import { type FormEvent, type ReactNode, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 
+import { ApiError } from '../api/client'
 import { useActivities, useAddNote, useDeal, useDealAction, useDeleteDeal, useTasks, useUsers } from '../api/hooks'
 import { type Activity, type Stage, STAGES } from '../api/types'
 import { useAuth } from '../auth/context'
@@ -90,6 +91,16 @@ export function DealPage() {
   const [lostReason, setLostReason] = useState('')
 
   if (deal.isLoading) return <Spinner />
+  if (deal.error instanceof ApiError && deal.error.status === 404) {
+    return (
+      <div className="py-24 text-center">
+        <p className="text-slate-600">{t('errors.http_404')}</p>
+        <Link to="/deals" className="mt-4 inline-block text-sm font-medium text-brand-700 hover:underline">
+          {t('deals.title')}
+        </Link>
+      </div>
+    )
+  }
   if (deal.isError || !deal.data) return <ErrorState onRetry={() => void deal.refetch()} />
   const d = deal.data
   const closedForMe = (d.stage === 'won' || d.stage === 'lost') && !user?.is_head
@@ -156,7 +167,7 @@ export function DealPage() {
               {t('common.edit')}
             </Button>
           )}
-          {user?.is_head && (
+          {user?.is_head && !user.demo_mode && (
             <Button
               variant="danger"
               icon={<Trash2 className="size-4" />}

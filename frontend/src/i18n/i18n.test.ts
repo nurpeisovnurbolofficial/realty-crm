@@ -30,6 +30,9 @@ describe('translations', () => {
       'property_has_deals',
       'client_has_deals',
       'empty_note',
+      'demo_readonly',
+      'property_in_use',
+      'invalid_filter',
     ]
     for (const code of backendCodes) {
       expect(en.errors).toHaveProperty(code)
