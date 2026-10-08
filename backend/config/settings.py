@@ -40,8 +40,18 @@ if RENDER_EXTERNAL_HOSTNAME:
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     SECURE_SSL_REDIRECT = True
+    SECURE_REDIRECT_EXEMPT = [r'^api/health/$']  # the hosting health check calls plain HTTP inside the network
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
+    # HSTS: the browser remembers to use only HTTPS for this site (30 days).
+    SECURE_HSTS_SECONDS = 60 * 60 * 24 * 30
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    # HSTS preload needs our own domain (we live on a subdomain of onrender.com), so it is skipped on purpose.
+    SILENCED_SYSTEM_CHECKS = ['security.W021']
+
+# Public demo: demo accounts are listed on the login page, deleting is disabled,
+# and the demo data is recreated every time the server starts (after each sleep on free hosting).
+DEMO_MODE = os.environ.get('DJANGO_DEMO_MODE', '1') == '1'
 
 
 # --- Applications -------------------------------------------------------------
@@ -56,6 +66,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_filters',
     'drf_spectacular',
+    'rest_framework_simplejwt.token_blacklist',  # lets logout and rotation revoke refresh tokens
     'accounts',
     'crm',
 ]
@@ -104,7 +115,22 @@ DATABASES = {
 }
 
 
+# --- Cache --------------------------------------------------------------------
+# Stored in the database, so all server processes share login-attempt counters.
+# (In-memory cache would give every gunicorn worker its own counter.)
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+        'LOCATION': 'cache_table',
+    }
+}
+
+
 # --- Auth ---------------------------------------------------------------------
+
+ADMIN_LOGIN_MAX_FAILURES = 5  # wrong passwords per IP before the admin login is locked
+ADMIN_LOGIN_LOCKOUT_MINUTES = 15
 
 AUTH_USER_MODEL = 'accounts.User'
 
@@ -128,7 +154,7 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PAGINATION_CLASS': 'crm.pagination.StandardPagination',
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
-    'DEFAULT_THROTTLE_RATES': {'login': '5/min'},  # brute-force protection for the login endpoint
+    'DEFAULT_THROTTLE_RATES': {'login': '10/min'},  # brute-force protection for the login endpoint
     'EXCEPTION_HANDLER': 'crm.exceptions.api_exception_handler',
 }
 if RENDER_EXTERNAL_HOSTNAME:
@@ -140,6 +166,7 @@ SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
     'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,  # an old refresh token stops working once it has been used
     'UPDATE_LAST_LOGIN': True,
 }
 

@@ -63,13 +63,55 @@ class AuthTests(APITestCase):
         self.assertEqual(with_token.status_code, 201)
 
     def test_login_is_throttled(self):
-        for _ in range(5):
+        for _ in range(10):
             self.login(password='wrong')
         self.assertEqual(self.login().status_code, 429)
 
     @override_settings(DEBUG=False)
     def test_spa_fallback_does_not_catch_api_urls(self):
         self.assertEqual(self.client.get('/api/no-such-endpoint/').status_code, 404)
+
+    def test_logout_revokes_the_refresh_token(self):
+        self.login()
+        stolen_refresh = self.client.cookies['refresh_token'].value
+        self.client.post('/api/auth/logout/')
+        self.client.cookies['refresh_token'] = stolen_refresh
+        self.assertEqual(self.client.post('/api/auth/refresh/').status_code, 401)
+
+    def test_used_refresh_token_cannot_be_reused(self):
+        self.login()
+        old_refresh = self.client.cookies['refresh_token'].value
+        self.assertEqual(self.client.post('/api/auth/refresh/').status_code, 204)  # rotates the token
+        self.client.cookies['refresh_token'] = old_refresh
+        self.assertEqual(self.client.post('/api/auth/refresh/').status_code, 401)
+
+    def test_me_reports_demo_mode(self):
+        self.login()
+        self.assertIn('demo_mode', self.client.get('/api/auth/me/').data)
+
+    @override_settings(DEMO_MODE=False)
+    def test_demo_accounts_are_hidden_outside_demo_mode(self):
+        User.objects.create_user('aliya', password='x', role=User.Role.HEAD)
+        self.assertEqual(self.client.get('/api/auth/demo-accounts/').data, [])
+
+    def test_admin_login_is_locked_after_repeated_failures(self):
+        User.objects.create_superuser('boss', password='right-pass-123')
+        for _ in range(5):
+            response = self.client.post('/admin/login/', {'username': 'boss', 'password': 'nope'})
+            self.assertEqual(response.status_code, 200)
+        locked = self.client.post('/admin/login/', {'username': 'boss', 'password': 'right-pass-123'})
+        self.assertEqual(locked.status_code, 429)
+
+    def test_admin_login_success_resets_the_counter(self):
+        User.objects.create_superuser('boss', password='right-pass-123')
+        for _ in range(4):
+            self.client.post('/admin/login/', {'username': 'boss', 'password': 'nope'})
+        ok = self.client.post('/admin/login/', {'username': 'boss', 'password': 'right-pass-123'})
+        self.assertEqual(ok.status_code, 302)
+        self.client.logout()
+        for _ in range(4):
+            response = self.client.post('/admin/login/', {'username': 'boss', 'password': 'nope'})
+            self.assertEqual(response.status_code, 200)
 
     def test_demo_accounts_endpoint_lists_only_demo_users(self):
         User.objects.create_user('aliya', password='x', role=User.Role.HEAD)

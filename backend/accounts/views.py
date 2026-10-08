@@ -4,10 +4,11 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
 from drf_spectacular.utils import extend_schema
 from rest_framework import generics, permissions, status
+from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
-from rest_framework_simplejwt.exceptions import TokenError
+from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -18,6 +19,7 @@ from .models import User
 from .serializers import LoginSerializer, UserSerializer
 
 DEMO_PASSWORD = 'demo-pass-2026'
+DEMO_USERNAMES = ['aliya', 'daniyar']
 
 
 def _set_auth_cookies(response, access, refresh=None):
@@ -91,9 +93,7 @@ class RefreshView(AuthView):
         serializer = TokenRefreshSerializer(data={'refresh': request.COOKIES.get(settings.JWT_REFRESH_COOKIE, '')})
         try:
             serializer.is_valid(raise_exception=True)
-        except TokenError:
-            return api_error('session_expired', 'Your session has expired. Please log in again.', 401)
-        except Exception:  # missing or malformed cookie
+        except (TokenError, InvalidToken, ValidationError):  # missing, expired, revoked or malformed
             return api_error('session_expired', 'Your session has expired. Please log in again.', 401)
 
         response = Response(status=status.HTTP_204_NO_CONTENT)
@@ -104,6 +104,13 @@ class RefreshView(AuthView):
 class LogoutView(AuthView):
     @extend_schema(request=None, responses={204: None})
     def post(self, request):
+        # Revoke the refresh token, so a copy of it (e.g. a stolen one) cannot be used after logout.
+        raw_refresh = request.COOKIES.get(settings.JWT_REFRESH_COOKIE)
+        if raw_refresh:
+            try:
+                RefreshToken(raw_refresh).blacklist()
+            except TokenError:
+                pass  # already expired or revoked: nothing to do
         response = Response(status=status.HTTP_204_NO_CONTENT)
         response.delete_cookie(settings.JWT_ACCESS_COOKIE, samesite=settings.JWT_COOKIE_SAMESITE)
         response.delete_cookie(settings.JWT_REFRESH_COOKIE, path='/api/auth/', samesite=settings.JWT_COOKIE_SAMESITE)
@@ -115,9 +122,9 @@ class DemoAccountsView(AuthView):
 
     @extend_schema(responses={200: dict})
     def get(self, request):
-        accounts = User.objects.filter(username__in=['aliya', 'daniyar']).order_by(
-            'role'
-        )  # 'head' sorts before 'manager'
+        if not settings.DEMO_MODE:
+            return Response([])  # a real agency must never publish passwords
+        accounts = User.objects.filter(username__in=DEMO_USERNAMES).order_by('role')  # 'head' sorts before 'manager'
         return Response(
             [{'username': user.username, 'role': user.role, 'password': DEMO_PASSWORD} for user in accounts]
         )
