@@ -16,7 +16,10 @@ import {
   type PropertyStatus,
 } from '../api/types'
 import { PropertyCover, PropertyStatusBadge } from '../components/domain'
-import { useErrorText, useMoney } from '../lib/hooks'
+import { useConfirm } from '../lib/confirm'
+import { useFormErrors } from '../lib/forms'
+import { useMoney } from '../lib/hooks'
+import { useDocumentTitle } from '../lib/useDocumentTitle'
 import { Pagination } from '../components/Pagination'
 import { useToast } from '../lib/toast'
 import {
@@ -74,9 +77,13 @@ function PropertyForm({ property, onClose }: { property: Property | null; onClos
   const { user } = useAuth()
   const { save, remove } = usePropertyCrud()
   const toast = useToast()
-  const errorText = useErrorText()
+  const confirm = useConfirm()
+  const money = useMoney()
+  const errors = useFormErrors()
   const [form, setForm] = useState(() => initialPropertyForm(property))
-  const [error, setError] = useState<string | null>(null)
+  // Rooms make no sense for land and commercial space; a floor makes no sense for land or a house.
+  const showRooms = form.kind === 'apartment' || form.kind === 'house'
+  const showFloor = form.kind === 'apartment' || form.kind === 'commercial'
   const readOnly = property !== null && !property.can_edit
 
   const set = (field: keyof typeof emptyForm) => (event: { target: { value: string } }) =>
@@ -84,14 +91,14 @@ function PropertyForm({ property, onClose }: { property: Property | null; onClos
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault()
-    setError(null)
+    errors.clear()
     const toNumber = (value: string) => (value === '' ? null : Number(value))
     try {
       await save.mutateAsync({
         id: property?.id,
         ...form,
-        rooms: toNumber(form.rooms),
-        floor: toNumber(form.floor),
+        rooms: showRooms ? toNumber(form.rooms) : null,
+        floor: showFloor ? toNumber(form.floor) : null,
         price: Number(form.price),
         area: form.area,
         // "reserved" is set only by deals, so we never send it (undefined is dropped from JSON)
@@ -100,18 +107,18 @@ function PropertyForm({ property, onClose }: { property: Property | null; onClos
       toast('success', t('common.saved'))
       onClose()
     } catch (err) {
-      setError(errorText(err))
+      errors.setError(err)
     }
   }
 
   async function onDelete() {
-    if (!property || !window.confirm(t('common.confirmDelete'))) return
+    if (!property || !(await confirm({ title: property.title, text: t('common.confirmDelete') }))) return
     try {
       await remove.mutateAsync(property.id)
       toast('success', t('common.deleted'))
       onClose()
     } catch (err) {
-      setError(errorText(err))
+      errors.setError(err)
     }
   }
 
@@ -153,7 +160,7 @@ function PropertyForm({ property, onClose }: { property: Property | null; onClos
       {readOnly && (
         <div className="mb-4 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">{t('properties.readOnly')}</div>
       )}
-      <FormError message={error} />
+      <FormError message={errors.formError} />
       <form id="property-form" onSubmit={onSubmit}>
         <fieldset disabled={readOnly} className="grid gap-4 sm:grid-cols-2">
           <Input
@@ -161,6 +168,7 @@ function PropertyForm({ property, onClose }: { property: Property | null; onClos
             value={form.title}
             onChange={set('title')}
             required
+            error={errors.field('title')}
             className="sm:col-span-2"
           />
           <Select
@@ -173,6 +181,7 @@ function PropertyForm({ property, onClose }: { property: Property | null; onClos
             label={t('properties.dealType')}
             value={form.deal_type}
             onChange={set('deal_type')}
+            error={errors.field('deal_type')}
             options={(['sale', 'rent'] as const).map((k) => ({ value: k, label: t(`dealTypes.${k}`) }))}
           />
           <Select
@@ -181,7 +190,13 @@ function PropertyForm({ property, onClose }: { property: Property | null; onClos
             onChange={set('district')}
             options={DISTRICTS.map((d) => ({ value: d, label: t(`districts.${d}`) }))}
           />
-          <Input label={t('properties.address')} value={form.address} onChange={set('address')} required />
+          <Input
+            label={t('properties.address')}
+            value={form.address}
+            onChange={set('address')}
+            required
+            error={errors.field('address')}
+          />
           <Input
             label={t('properties.price')}
             type="number"
@@ -190,6 +205,8 @@ function PropertyForm({ property, onClose }: { property: Property | null; onClos
             value={form.price}
             onChange={set('price')}
             required
+            error={errors.field('price')}
+            hint={Number(form.price) > 0 ? money(Number(form.price)) : undefined}
           />
           <Input
             label={t('properties.area')}
@@ -199,14 +216,33 @@ function PropertyForm({ property, onClose }: { property: Property | null; onClos
             value={form.area}
             onChange={set('area')}
             required
+            error={errors.field('area')}
           />
-          <Input label={t('properties.rooms')} type="number" min={0} value={form.rooms} onChange={set('rooms')} />
-          <Input label={t('properties.floor')} type="number" value={form.floor} onChange={set('floor')} />
+          {showRooms && (
+            <Input
+              label={t('properties.rooms')}
+              type="number"
+              min={0}
+              value={form.rooms}
+              onChange={set('rooms')}
+              error={errors.field('rooms')}
+            />
+          )}
+          {showFloor && (
+            <Input
+              label={t('properties.floor')}
+              type="number"
+              value={form.floor}
+              onChange={set('floor')}
+              error={errors.field('floor')}
+            />
+          )}
           <Select
             label={t('properties.status')}
             value={form.status}
             onChange={set('status')}
             disabled={form.status === 'reserved'}
+            error={errors.field('status')}
             options={PROPERTY_STATUSES.filter((s) => s !== 'reserved' || form.status === 'reserved').map((s) => ({
               value: s,
               label: t(`propertyStatuses.${s}`),
@@ -277,6 +313,7 @@ function PropertyCard({ property, onOpen }: { property: Property; onOpen: () => 
 
 export function PropertiesPage() {
   const { t } = useTranslation()
+  useDocumentTitle(t('nav.properties'))
   const [params, setParams] = useSearchParams()
   const [dealType, setDealType] = useState<'' | DealType>('')
   const [kind, setKind] = useState('')

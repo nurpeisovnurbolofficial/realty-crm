@@ -4,7 +4,8 @@ import { useTranslation } from 'react-i18next'
 import { useClients, useProperties, useSaveDeal, useUsers } from '../api/hooks'
 import type { Deal, DealType } from '../api/types'
 import { useAuth } from '../auth/context'
-import { useErrorText, useMoney } from '../lib/hooks'
+import { useFormErrors } from '../lib/forms'
+import { useMoney } from '../lib/hooks'
 import { useToast } from '../lib/toast'
 import { Button, FormError, Input, Modal, Select } from './ui'
 
@@ -25,7 +26,6 @@ const empty = {
   owner: '',
 }
 
-/** Create a new deal or edit an existing one. The stage is not here: it changes on the board. */
 function initialForm(deal?: Deal) {
   if (!deal) return empty
   return {
@@ -46,10 +46,9 @@ export function DealForm({ onClose, deal, onSaved }: Props) {
   const { user } = useAuth()
   const money = useMoney()
   const toast = useToast()
-  const errorText = useErrorText()
   const save = useSaveDeal()
+  const errors = useFormErrors()
   const [form, setForm] = useState(() => initialForm(deal))
-  const [error, setError] = useState<string | null>(null)
 
   const clients = useClients({ page_size: 100, ordering: 'name' })
   const properties = useProperties({ page_size: 100, deal_type: form.deal_type, ordering: '-created_at' })
@@ -58,7 +57,7 @@ export function DealForm({ onClose, deal, onSaved }: Props) {
   const set = (field: keyof typeof empty) => (event: { target: { value: string } }) =>
     setForm((current) => ({ ...current, [field]: event.target.value }))
 
-  // Choosing a property fills in the amount and the usual commission (3% for sale, 50% of a month for rent).
+  // Choosing a property fills in the amount (if it is still empty).
   function onPropertyChange(value: string) {
     const prop = properties.data?.results.find((p) => String(p.id) === value)
     setForm((current) => ({
@@ -68,6 +67,7 @@ export function DealForm({ onClose, deal, onSaved }: Props) {
     }))
   }
 
+  // The usual agency commission: 3% of the price for a sale, 50% of a month's rent for a rent.
   function onTypeChange(value: DealType) {
     setForm((current) => ({
       ...current,
@@ -79,7 +79,7 @@ export function DealForm({ onClose, deal, onSaved }: Props) {
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault()
-    setError(null)
+    errors.clear()
     try {
       const saved = await save.mutateAsync({
         id: deal?.id,
@@ -96,7 +96,7 @@ export function DealForm({ onClose, deal, onSaved }: Props) {
       onSaved?.(saved)
       onClose()
     } catch (err) {
-      setError(errorText(err))
+      errors.setError(err)
     }
   }
 
@@ -104,6 +104,9 @@ export function DealForm({ onClose, deal, onSaved }: Props) {
   const propertyOptions = (properties.data?.results ?? [])
     .filter((p) => p.status === 'available' || String(p.id) === form.property)
     .map((p) => ({ value: p.id, label: `${p.title} · ${money(p.price, true)}` }))
+
+  const amount = Number(form.amount || 0)
+  const commission = (amount * Number(form.commission_percent || 0)) / 100
 
   return (
     <Modal
@@ -122,14 +125,22 @@ export function DealForm({ onClose, deal, onSaved }: Props) {
         </>
       }
     >
-      <FormError message={error} />
+      <FormError message={errors.formError} />
       <form id="deal-form" onSubmit={onSubmit} className="grid gap-4 sm:grid-cols-2">
-        <Input label={t('deals.name')} value={form.title} onChange={set('title')} required className="sm:col-span-2" />
+        <Input
+          label={t('deals.name')}
+          value={form.title}
+          onChange={set('title')}
+          required
+          error={errors.field('title')}
+          className="sm:col-span-2"
+        />
         <Select
           label={t('deals.client')}
           value={form.client}
           onChange={set('client')}
           required
+          error={errors.field('client')}
           placeholder={t('deals.selectClient')}
           options={(clients.data?.results ?? []).map((c) => ({
             value: c.id,
@@ -140,6 +151,7 @@ export function DealForm({ onClose, deal, onSaved }: Props) {
           label={t('deals.type')}
           value={form.deal_type}
           onChange={(e) => onTypeChange(e.target.value as DealType)}
+          error={errors.field('deal_type')}
           options={[
             { value: 'sale', label: t('dealTypes.sale') },
             { value: 'rent', label: t('dealTypes.rent') },
@@ -149,6 +161,7 @@ export function DealForm({ onClose, deal, onSaved }: Props) {
           label={t('deals.property')}
           value={form.property}
           onChange={(e) => onPropertyChange(e.target.value)}
+          error={errors.field('property')}
           placeholder={t('deals.noProperty')}
           options={propertyOptions}
           className="sm:col-span-2"
@@ -160,6 +173,8 @@ export function DealForm({ onClose, deal, onSaved }: Props) {
           step={10000}
           value={form.amount}
           onChange={set('amount')}
+          error={errors.field('amount')}
+          hint={amount > 0 ? t('deals.total', { value: money(amount) }) : undefined}
         />
         <Input
           label={t('deals.commissionPercent')}
@@ -169,18 +184,22 @@ export function DealForm({ onClose, deal, onSaved }: Props) {
           step={0.5}
           value={form.commission_percent}
           onChange={set('commission_percent')}
+          error={errors.field('commission_percent')}
+          hint={commission > 0 ? `${t('deals.commission')}: ${money(commission)}` : undefined}
         />
         <Input
           label={t('deals.expectedClose')}
           type="date"
           value={form.expected_close_date}
           onChange={set('expected_close_date')}
+          error={errors.field('expected_close_date')}
         />
         {user?.is_head && (
           <Select
             label={t('deals.owner')}
             value={form.owner}
             onChange={set('owner')}
+            error={errors.field('owner')}
             placeholder={user.display_name}
             options={(users.data ?? [])
               .filter((u) => u.role === 'manager')

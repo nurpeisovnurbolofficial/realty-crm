@@ -1,11 +1,16 @@
 import { Building, Plus, Search, Trash2, UserRound } from 'lucide-react'
 import { type FormEvent, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Link, useSearchParams } from 'react-router-dom'
 
-import { useClientCrud, useClients, useUsers } from '../api/hooks'
+import { useClient, useClientCrud, useClients, useDeals, useUsers } from '../api/hooks'
 import { type Client, CLIENT_SOURCES, type ClientKind, type ClientSource } from '../api/types'
 import { useAuth } from '../auth/context'
-import { useErrorText } from '../lib/hooks'
+import { StageBadge } from '../components/domain'
+import { useConfirm } from '../lib/confirm'
+import { useFormErrors } from '../lib/forms'
+import { useMoney } from '../lib/hooks'
+import { useDocumentTitle } from '../lib/useDocumentTitle'
 import { Pagination } from '../components/Pagination'
 import { useToast } from '../lib/toast'
 import {
@@ -58,34 +63,34 @@ function ClientForm({ client, onClose }: { client: Client | null; onClose: () =>
   const users = useUsers()
   const { save, remove } = useClientCrud()
   const toast = useToast()
-  const errorText = useErrorText()
+  const confirm = useConfirm()
+  const errors = useFormErrors()
   const [form, setForm] = useState(() => initialClientForm(client))
-  const [error, setError] = useState<string | null>(null)
 
   const set = (field: keyof typeof emptyForm) => (event: { target: { value: string } }) =>
     setForm((current) => ({ ...current, [field]: event.target.value }))
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault()
-    setError(null)
+    errors.clear()
     const { owner, ...rest } = form
     try {
       await save.mutateAsync({ id: client?.id, ...rest, ...(user?.is_head && owner ? { owner: Number(owner) } : {}) })
       toast('success', t('common.saved'))
       onClose()
     } catch (err) {
-      setError(errorText(err))
+      errors.setError(err)
     }
   }
 
   async function onDelete() {
-    if (!client || !window.confirm(t('common.confirmDelete'))) return
+    if (!client || !(await confirm({ title: client.name, text: t('common.confirmDelete') }))) return
     try {
       await remove.mutateAsync(client.id)
       toast('success', t('common.deleted'))
       onClose()
     } catch (err) {
-      setError(errorText(err))
+      errors.setError(err)
     }
   }
 
@@ -117,9 +122,15 @@ function ClientForm({ client, onClose }: { client: Client | null; onClose: () =>
         </>
       }
     >
-      <FormError message={error} />
+      <FormError message={errors.formError} />
       <form id="client-form" onSubmit={onSubmit} className="grid gap-4 sm:grid-cols-2">
-        <Input label={t('clients.name')} value={form.name} onChange={set('name')} required />
+        <Input
+          label={t('clients.name')}
+          value={form.name}
+          onChange={set('name')}
+          required
+          error={errors.field('name')}
+        />
         <Select
           label={t('clients.kind')}
           value={form.kind}
@@ -134,8 +145,21 @@ function ClientForm({ client, onClose }: { client: Client | null; onClose: () =>
             className="sm:col-span-2"
           />
         )}
-        <Input label={t('clients.phone')} type="tel" value={form.phone} onChange={set('phone')} required />
-        <Input label={t('clients.email')} type="email" value={form.email} onChange={set('email')} />
+        <Input
+          label={t('clients.phone')}
+          type="tel"
+          value={form.phone}
+          onChange={set('phone')}
+          required
+          error={errors.field('phone')}
+        />
+        <Input
+          label={t('clients.email')}
+          type="email"
+          value={form.email}
+          onChange={set('email')}
+          error={errors.field('email')}
+        />
         <Select
           label={t('clients.source')}
           value={form.source}
@@ -153,13 +177,52 @@ function ClientForm({ client, onClose }: { client: Client | null; onClose: () =>
         )}
         <Textarea label={t('clients.notes')} value={form.notes} onChange={set('notes')} className="sm:col-span-2" />
       </form>
+      {client && <ClientDeals clientId={client.id} />}
     </Modal>
+  )
+}
+
+/** The deals of one client, shown inside the client card. */
+function ClientDeals({ clientId }: { clientId: number }) {
+  const { t } = useTranslation()
+  const money = useMoney()
+  const deals = useDeals({ client: clientId, page_size: 20 })
+  if (!deals.data) return null
+  return (
+    <div className="mt-6 border-t border-slate-100 pt-4">
+      <h3 className="mb-2 text-sm font-semibold text-slate-800">{t('clients.dealsTitle')}</h3>
+      {deals.data.results.length === 0 ? (
+        <p className="text-sm text-slate-500">{t('clients.noDeals')}</p>
+      ) : (
+        <ul className="divide-y divide-slate-100">
+          {deals.data.results.map((deal) => (
+            <li key={deal.id}>
+              <Link
+                to={`/deals/${deal.id}`}
+                className="flex items-center justify-between gap-3 py-2 text-sm hover:text-brand-700"
+              >
+                <span className="truncate">{deal.title}</span>
+                <span className="flex shrink-0 items-center gap-2">
+                  <span className="text-slate-500">{deal.amount ? money(deal.amount, true) : '—'}</span>
+                  <StageBadge stage={deal.stage} />
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   )
 }
 
 export function ClientsPage() {
   const { t } = useTranslation()
   const { user } = useAuth()
+  useDocumentTitle(t('nav.clients'))
+  const [params, setParams] = useSearchParams()
+  // Opening a client by link, e.g. from a deal page: /clients?open=5
+  const openId = params.get('open')
+  const linked = useClient(openId ? Number(openId) : null)
   const [search, setSearch] = useState('')
   const [source, setSource] = useState('')
   const [page, setPage] = useState(1)
@@ -272,6 +335,9 @@ export function ClientsPage() {
       {clients.data && <Pagination page={page} pageSize={PAGE_SIZE} total={clients.data.count} onChange={setPage} />}
 
       {formOpen && <ClientForm client={editing} onClose={() => setFormOpen(false)} />}
+      {linked.data && !formOpen && (
+        <ClientForm key={linked.data.id} client={linked.data} onClose={() => setParams({}, { replace: true })} />
+      )}
     </>
   )
 }

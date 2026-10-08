@@ -3,7 +3,7 @@
  * Keeping them in one place gives every page the same look.
  */
 import clsx from 'clsx'
-import { Loader2, X } from 'lucide-react'
+import { Eye, EyeOff, Loader2, X } from 'lucide-react'
 import {
   type ButtonHTMLAttributes,
   type InputHTMLAttributes,
@@ -12,6 +12,8 @@ import {
   type TextareaHTMLAttributes,
   useEffect,
   useId,
+  useRef,
+  useState,
 } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -68,21 +70,27 @@ export function Button({
 // --- Form fields --------------------------------------------------------------
 
 const fieldClass =
-  'block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm ' +
-  'placeholder:text-slate-400 focus:border-brand-600 focus:ring-2 focus:ring-brand-100 focus:outline-none ' +
-  'disabled:bg-slate-100 disabled:text-slate-500'
+  'block w-full rounded-lg border bg-white px-3 py-2 text-sm text-slate-800 shadow-sm ' +
+  'placeholder:text-slate-400 focus:ring-2 focus:outline-none disabled:bg-slate-100 disabled:text-slate-500'
+const okBorder = 'border-slate-300 focus:border-brand-600 focus:ring-brand-100'
+const errorBorder = 'border-red-400 focus:border-red-500 focus:ring-red-100'
+
+interface FieldExtras {
+  label?: string
+  /** Validation error shown under the field (e.g. from the API). */
+  error?: string
+  /** Helper text shown under the field when there is no error. */
+  hint?: ReactNode
+}
 
 function FieldWrapper({
   label,
   id,
+  error,
+  hint,
   children,
   className,
-}: {
-  label?: string
-  id: string
-  children: ReactNode
-  className?: string
-}) {
+}: FieldExtras & { id: string; children: ReactNode; className?: string }) {
   return (
     <div className={className}>
       {label && (
@@ -91,43 +99,90 @@ function FieldWrapper({
         </label>
       )}
       {children}
+      {error ? (
+        <p id={`${id}-error`} className="mt-1 text-xs text-red-600">
+          {error}
+        </p>
+      ) : (
+        hint && <p className="mt-1 text-xs text-slate-500">{hint}</p>
+      )}
     </div>
   )
 }
 
-export function Input({ label, className, ...rest }: InputHTMLAttributes<HTMLInputElement> & { label?: string }) {
+/** Links an input to its error message for screen readers. */
+function a11y(id: string, error?: string) {
+  return error ? { 'aria-invalid': true, 'aria-describedby': `${id}-error` } : {}
+}
+
+export function Input({ label, error, hint, className, ...rest }: InputHTMLAttributes<HTMLInputElement> & FieldExtras) {
   const id = useId()
   return (
+    <FieldWrapper label={label} id={id} error={error} hint={hint} className={className}>
+      <input id={id} {...rest} {...a11y(id, error)} className={clsx(fieldClass, error ? errorBorder : okBorder)} />
+    </FieldWrapper>
+  )
+}
+
+export function PasswordInput({ label, className, ...rest }: InputHTMLAttributes<HTMLInputElement> & FieldExtras) {
+  const id = useId()
+  const { t } = useTranslation()
+  const [visible, setVisible] = useState(false)
+  const text = visible ? t('auth.hidePassword') : t('auth.showPassword')
+  return (
     <FieldWrapper label={label} id={id} className={className}>
-      <input id={id} {...rest} className={fieldClass} />
+      <div className="relative">
+        <input id={id} {...rest} type={visible ? 'text' : 'password'} className={clsx(fieldClass, okBorder, 'pr-10')} />
+        <button
+          type="button"
+          onClick={() => setVisible((v) => !v)}
+          className="absolute inset-y-0 right-0 flex items-center px-3 text-slate-400 hover:text-slate-600"
+          aria-label={text}
+          title={text}
+        >
+          {visible ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+        </button>
+      </div>
     </FieldWrapper>
   )
 }
 
 export function Textarea({
   label,
+  error,
+  hint,
   className,
   ...rest
-}: TextareaHTMLAttributes<HTMLTextAreaElement> & { label?: string }) {
+}: TextareaHTMLAttributes<HTMLTextAreaElement> & FieldExtras) {
   const id = useId()
   return (
-    <FieldWrapper label={label} id={id} className={className}>
-      <textarea id={id} rows={3} {...rest} className={fieldClass} />
+    <FieldWrapper label={label} id={id} error={error} hint={hint} className={className}>
+      <textarea
+        id={id}
+        rows={3}
+        {...rest}
+        {...a11y(id, error)}
+        className={clsx(fieldClass, error ? errorBorder : okBorder)}
+      />
     </FieldWrapper>
   )
 }
 
-interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
-  label?: string
+interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement>, FieldExtras {
   options: { value: string | number; label: string }[]
   placeholder?: string
 }
 
-export function Select({ label, options, placeholder, className, ...rest }: SelectProps) {
+export function Select({ label, error, hint, options, placeholder, className, ...rest }: SelectProps) {
   const id = useId()
   return (
-    <FieldWrapper label={label} id={id} className={className}>
-      <select id={id} {...rest} className={clsx(fieldClass, 'pr-8')}>
+    <FieldWrapper label={label} id={id} error={error} hint={hint} className={className}>
+      <select
+        id={id}
+        {...rest}
+        {...a11y(id, error)}
+        className={clsx(fieldClass, error ? errorBorder : okBorder, 'pr-8')}
+      >
         {placeholder !== undefined && <option value="">{placeholder}</option>}
         {options.map((option) => (
           <option key={option.value} value={option.value}>
@@ -248,13 +303,54 @@ interface ModalProps {
   wide?: boolean
 }
 
+const FOCUSABLE =
+  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+
+/**
+ * Accessible dialog: Escape closes it, Tab keeps the focus inside,
+ * and when it closes the focus returns to the button that opened it.
+ */
 export function Modal({ open, title, onClose, children, footer, wide }: ModalProps) {
+  const dialogRef = useRef<HTMLDivElement>(null)
+  // Keep the latest onClose without re-running the focus effect on every render.
+  const onCloseRef = useRef(onClose)
+  useEffect(() => {
+    onCloseRef.current = onClose
+  })
+
   useEffect(() => {
     if (!open) return
-    const onKey = (event: KeyboardEvent) => event.key === 'Escape' && onClose()
+    const previouslyFocused = document.activeElement as HTMLElement | null
+    const dialog = dialogRef.current
+    // Focus the first field, unless something inside already has focus (e.g. an autoFocus input).
+    if (dialog && !dialog.contains(document.activeElement)) {
+      const first =
+        dialog.querySelector<HTMLElement>('input, select, textarea') ?? dialog.querySelector<HTMLElement>(FOCUSABLE)
+      first?.focus()
+    }
+
+    function onKey(event: KeyboardEvent) {
+      if (event.key === 'Escape') onCloseRef.current()
+      if (event.key !== 'Tab' || !dialog) return
+      const items = [...dialog.querySelectorAll<HTMLElement>(FOCUSABLE)]
+      if (items.length === 0) return
+      const first = items[0]
+      const last = items[items.length - 1]
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault()
+        first.focus()
+      }
+    }
+
     window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [open, onClose])
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      previouslyFocused?.focus?.()
+    }
+  }, [open])
 
   if (!open) return null
   return (
@@ -263,6 +359,7 @@ export function Modal({ open, title, onClose, children, footer, wide }: ModalPro
       onMouseDown={onClose}
     >
       <div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-label={title}
@@ -319,6 +416,16 @@ export function Segmented<T extends string>({
           )}
         >
           {option.label}
+          {option.count !== undefined && option.count > 0 && (
+            <span
+              className={clsx(
+                'ml-1.5 rounded-full px-1.5 text-xs',
+                value === option.value ? 'bg-white/20' : 'bg-slate-200 text-slate-600',
+              )}
+            >
+              {option.count}
+            </span>
+          )}
         </button>
       ))}
     </div>

@@ -1,11 +1,13 @@
 import { Plus } from 'lucide-react'
 import { type FormEvent, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useSearchParams } from 'react-router-dom'
 
-import { useBoard, useTaskCrud, useTasks, useUsers } from '../api/hooks'
+import { useBoard, useTaskCrud, useTasks, useTaskSummary, useUsers } from '../api/hooks'
 import { OPEN_STAGES } from '../api/types'
 import { useAuth } from '../auth/context'
-import { useErrorText } from '../lib/hooks'
+import { useFormErrors } from '../lib/forms'
+import { useDocumentTitle } from '../lib/useDocumentTitle'
 import { Pagination } from '../components/Pagination'
 import { TaskRow } from '../components/TaskList'
 import { useToast } from '../lib/toast'
@@ -34,17 +36,17 @@ function NewTaskModal({ onClose }: { onClose: () => void }) {
   const board = useBoard({})
   const { save } = useTaskCrud()
   const toast = useToast()
-  const errorText = useErrorText()
+  const errors = useFormErrors()
   const [title, setTitle] = useState('')
   const [deal, setDeal] = useState('')
   const [assignee, setAssignee] = useState('')
   const [due, setDue] = useState(() => toLocalInput(new Date(Date.now() + 3600 * 1000)))
-  const [error, setError] = useState<string | null>(null)
 
   const openDeals = OPEN_STAGES.flatMap((stage) => board.data?.[stage] ?? [])
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault()
+    errors.clear()
     try {
       await save.mutateAsync({
         title,
@@ -55,7 +57,7 @@ function NewTaskModal({ onClose }: { onClose: () => void }) {
       toast('success', t('common.saved'))
       onClose()
     } catch (err) {
-      setError(errorText(err))
+      errors.setError(err)
     }
   }
 
@@ -75,20 +77,29 @@ function NewTaskModal({ onClose }: { onClose: () => void }) {
         </>
       }
     >
-      <FormError message={error} />
+      <FormError message={errors.formError} />
       <form id="task-form" onSubmit={onSubmit} className="grid gap-4">
-        <Input label={t('tasks.name')} value={title} onChange={(e) => setTitle(e.target.value)} required autoFocus />
+        <Input
+          label={t('tasks.name')}
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          required
+          autoFocus
+          error={errors.field('title')}
+        />
         <Input
           label={t('tasks.due')}
           type="datetime-local"
           value={due}
           onChange={(e) => setDue(e.target.value)}
           required
+          error={errors.field('due_at')}
         />
         <Select
           label={t('tasks.deal')}
           value={deal}
           onChange={(e) => setDeal(e.target.value)}
+          error={errors.field('deal')}
           placeholder={t('tasks.noDeal')}
           options={openDeals.map((d) => ({ value: d.id, label: d.title }))}
         />
@@ -109,8 +120,15 @@ function NewTaskModal({ onClose }: { onClose: () => void }) {
 export function TasksPage() {
   const { t } = useTranslation()
   const { user } = useAuth()
-  const [when, setWhen] = useState<When>('today')
+  useDocumentTitle(t('nav.tasks'))
+  // The tab can come from a link, e.g. the dashboard's "overdue" badge: /tasks?when=overdue
+  const [params] = useSearchParams()
+  const initialTab = params.get('when')
+  const [when, setWhen] = useState<When>(
+    initialTab === 'overdue' || initialTab === 'upcoming' || initialTab === 'done' ? initialTab : 'today',
+  )
   const [page, setPage] = useState(1)
+  const summary = useTaskSummary()
   const [creating, setCreating] = useState(false)
   const tasks = useTasks({ when, page, page_size: PAGE_SIZE })
 
@@ -135,6 +153,7 @@ export function TasksPage() {
           options={(['overdue', 'today', 'upcoming', 'done'] as const).map((value) => ({
             value,
             label: t(`tasks.${value}`),
+            count: summary.data?.[value],
           }))}
         />
       </div>

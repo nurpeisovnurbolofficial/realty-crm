@@ -7,7 +7,8 @@ import { useDemoAccounts } from '../api/hooks'
 import { useAuth } from '../auth/context'
 import { useErrorText } from '../lib/hooks'
 import { LanguageSwitch, Logo } from '../components/Layout'
-import { Button, FormError, Input } from '../components/ui'
+import { Button, FormError, Input, PasswordInput } from '../components/ui'
+import { useDocumentTitle } from '../lib/useDocumentTitle'
 
 export function LoginPage() {
   const { t } = useTranslation()
@@ -16,6 +17,7 @@ export function LoginPage() {
   const location = useLocation()
   const errorText = useErrorText()
   const demo = useDemoAccounts()
+  useDocumentTitle(t('auth.signIn'))
 
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -85,9 +87,8 @@ export function LoginPage() {
               autoComplete="username"
               required
             />
-            <Input
+            <PasswordInput
               label={t('auth.password')}
-              type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               autoComplete="current-password"

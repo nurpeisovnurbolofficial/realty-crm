@@ -14,6 +14,7 @@ import type {
   Client,
   Dashboard,
   Deal,
+  DealListItem,
   DemoAccount,
   Paginated,
   Property,
@@ -78,6 +79,27 @@ export const useProperty = (id: number | null) =>
     enabled: id !== null,
   })
 
+export const useClient = (id: number | null) =>
+  useQuery({
+    queryKey: ['client', id],
+    queryFn: () => api<Client>(`/api/clients/${id}/`),
+    enabled: id !== null,
+  })
+
+/** Deals as a flat, paginated list (e.g. the deals of one client). */
+export const useDeals = (filters: Filters) =>
+  useQuery({
+    queryKey: ['deals', filters],
+    queryFn: () => api<Paginated<DealListItem>>('/api/deals/', { params: filters }),
+  })
+
+/** Number of tasks per tab: overdue / today / upcoming / done. */
+export const useTaskSummary = () =>
+  useQuery({
+    queryKey: ['tasks', 'summary'],
+    queryFn: () => api<Record<'overdue' | 'today' | 'upcoming' | 'done', number>>('/api/tasks/summary/'),
+  })
+
 export const useTasks = (filters: Filters) =>
   useQuery({
     queryKey: keys.tasks(filters),
@@ -95,6 +117,7 @@ function useInvalidateDeals() {
     queryClient.invalidateQueries({ queryKey: ['dashboard'] })
     queryClient.invalidateQueries({ queryKey: ['properties'] })
     queryClient.invalidateQueries({ queryKey: ['tasks'] })
+    queryClient.invalidateQueries({ queryKey: ['deals'] })
     if (dealId) {
       queryClient.invalidateQueries({ queryKey: keys.deal(dealId) })
       queryClient.invalidateQueries({ queryKey: keys.activities(dealId) })

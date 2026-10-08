@@ -20,7 +20,7 @@ import {
 } from '@dnd-kit/core'
 import { CSS } from '@dnd-kit/utilities'
 import clsx from 'clsx'
-import { CalendarDays, CheckSquare, Home, Plus, Search } from 'lucide-react'
+import { CalendarDays, CheckSquare, Home, Lock, Plus, Search } from 'lucide-react'
 import { type FormEvent, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
@@ -35,12 +35,20 @@ import { useToast } from '../lib/toast'
 import { Avatar, Button, ErrorState, Input, Modal, PageHeader, Segmented, Select, Spinner } from '../components/ui'
 import { formatDate } from '../lib/format'
 import { useDebounced } from '../lib/useDebounced'
+import { useDocumentTitle } from '../lib/useDocumentTitle'
 
 function DealCard({ deal, overlay = false }: { deal: DealListItem; overlay?: boolean }) {
   const { t, i18n } = useTranslation()
+  const { user } = useAuth()
   const money = useMoney()
   const navigate = useNavigate()
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id: deal.id, data: { deal } })
+  // Only the head of sales may move a closed deal, so for managers such cards are not draggable.
+  const locked = (deal.stage === 'won' || deal.stage === 'lost') && !user?.is_head
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id: deal.id,
+    data: { deal },
+    disabled: locked,
+  })
 
   return (
     <div
@@ -49,14 +57,19 @@ function DealCard({ deal, overlay = false }: { deal: DealListItem; overlay?: boo
       {...(overlay ? {} : listeners)}
       {...(overlay ? {} : attributes)}
       onClick={() => navigate(`/deals/${deal.id}`)}
+      title={locked ? t('deals.locked') : undefined}
       className={clsx(
-        'cursor-grab rounded-lg border border-slate-200 bg-white p-3 text-left shadow-sm transition-shadow select-none hover:border-brand-500 hover:shadow-md',
+        locked ? 'cursor-pointer' : 'cursor-grab',
+        'rounded-lg border border-slate-200 bg-white p-3 text-left shadow-sm transition-shadow select-none hover:border-brand-500 hover:shadow-md',
         isDragging && !overlay && 'opacity-30',
         overlay && 'rotate-2 cursor-grabbing shadow-xl',
       )}
     >
       <div className="flex items-start justify-between gap-2">
-        <div className="text-sm leading-snug font-medium text-slate-900">{deal.title}</div>
+        <div className="text-sm leading-snug font-medium text-slate-900">
+          {locked && <Lock className="mr-1 inline size-3 text-slate-400" />}
+          {deal.title}
+        </div>
         <Avatar name={deal.owner.display_name} className="size-6 text-[10px]" />
       </div>
       <div className="mt-1 text-xs text-slate-500">{deal.client.name}</div>
@@ -114,6 +127,11 @@ function Column({ stage, deals }: { stage: Stage; deals: DealListItem[] }) {
         {deals.map((deal) => (
           <DealCard key={deal.id} deal={deal} />
         ))}
+        {deals.length === 0 && (
+          <div className="flex flex-1 items-center justify-center rounded-lg border-2 border-dashed border-slate-200 p-4 text-center text-xs text-slate-400">
+            {t('deals.dropHere')}
+          </div>
+        )}
       </div>
     </div>
   )
@@ -125,6 +143,7 @@ export function DealsBoardPage() {
   const toast = useToast()
   const errorText = useErrorText()
   const users = useUsers()
+  useDocumentTitle(t('nav.deals'))
 
   const [search, setSearch] = useState('')
   const [dealType, setDealType] = useState<'' | 'sale' | 'rent'>('')

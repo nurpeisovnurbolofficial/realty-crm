@@ -1,6 +1,7 @@
-import { AlertTriangle, Clock, Percent, TrendingUp, Wallet } from 'lucide-react'
+import { AlertTriangle, CheckSquare, Clock, Percent, TrendingUp, Wallet } from 'lucide-react'
 import { type ReactNode, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router-dom'
 import {
   Area,
   AreaChart,
@@ -19,6 +20,7 @@ import { useAuth } from '../auth/context'
 import { useMoney } from '../lib/hooks'
 import { Avatar, Card, EmptyState, ErrorState, PageHeader, Select, Spinner } from '../components/ui'
 import { formatMonth } from '../lib/format'
+import { useDocumentTitle } from '../lib/useDocumentTitle'
 
 const STAGE_COLORS = ['#94a3b8', '#3b82f6', '#6366f1', '#f59e0b', '#8b5cf6']
 
@@ -27,13 +29,15 @@ function Kpi({
   label,
   value,
   hint,
+  hintTo,
   alert,
 }: {
   icon: ReactNode
   label: string
   value: string
   hint?: string
-  alert?: string
+  hintTo?: string
+  alert?: { text: string; to: string }
 }) {
   return (
     <Card className="p-5">
@@ -42,11 +46,24 @@ function Kpi({
         {label}
       </div>
       <div className="mt-3 text-2xl font-semibold tracking-tight text-slate-900">{value}</div>
-      {hint && <div className="mt-1 text-xs text-slate-500">{hint}</div>}
-      {alert && (
-        <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700">
-          <AlertTriangle className="size-3" /> {alert}
+      {hint && (
+        <div className="mt-1 text-xs text-slate-500">
+          {hintTo ? (
+            <Link to={hintTo} className="hover:text-brand-700 hover:underline">
+              {hint}
+            </Link>
+          ) : (
+            hint
+          )}
         </div>
+      )}
+      {alert && (
+        <Link
+          to={alert.to}
+          className="mt-2 inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700 hover:bg-red-100"
+        >
+          <AlertTriangle className="size-3" /> {alert.text}
+        </Link>
       )}
     </Card>
   )
@@ -65,6 +82,7 @@ export function DashboardPage() {
   const { t, i18n } = useTranslation()
   const { user } = useAuth()
   const money = useMoney()
+  useDocumentTitle(t('nav.dashboard'))
   const [owner, setOwner] = useState('')
   const dashboard = useDashboard({ owner })
   const users = useUsers()
@@ -96,7 +114,7 @@ export function DashboardPage() {
         }
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
         <Kpi
           icon={<Wallet className="size-4" />}
           label={t('dashboard.pipeline')}
@@ -127,8 +145,19 @@ export function DashboardPage() {
           value={
             data.avg_days_to_close === null ? '—' : t('dashboard.days', { count: Math.round(data.avg_days_to_close) })
           }
-          hint={t('dashboard.tasksHint', { today: data.tasks.today })}
-          alert={data.tasks.overdue ? t('dashboard.overdue', { count: data.tasks.overdue }) : undefined}
+          hint={t('dashboard.avgHint')}
+        />
+        <Kpi
+          icon={<CheckSquare className="size-4" />}
+          label={t('dashboard.todayTasks')}
+          value={String(data.tasks.today)}
+          hint={t('dashboard.allTasks')}
+          hintTo="/tasks"
+          alert={
+            data.tasks.overdue
+              ? { text: t('dashboard.overdue', { count: data.tasks.overdue }), to: '/tasks?when=overdue' }
+              : undefined
+          }
         />
       </div>
 

@@ -1,20 +1,21 @@
-import { lazy, Suspense } from 'react'
+import { Suspense } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, Route, Routes } from 'react-router-dom'
 
 import { RequireAuth } from './auth/AuthContext'
 import { Layout } from './components/Layout'
 import { Spinner } from './components/ui'
+import { lazyPage } from './lib/lazyPage'
 import { LoginPage } from './pages/LoginPage'
 
 // Code splitting: each page is downloaded only when it is opened for the first time.
 // The dashboard charts (Recharts) are the heaviest part, so the login page loads much faster.
-const DashboardPage = lazy(() => import('./pages/DashboardPage').then((m) => ({ default: m.DashboardPage })))
-const DealsBoardPage = lazy(() => import('./pages/DealsBoardPage').then((m) => ({ default: m.DealsBoardPage })))
-const DealPage = lazy(() => import('./pages/DealPage').then((m) => ({ default: m.DealPage })))
-const ClientsPage = lazy(() => import('./pages/ClientsPage').then((m) => ({ default: m.ClientsPage })))
-const PropertiesPage = lazy(() => import('./pages/PropertiesPage').then((m) => ({ default: m.PropertiesPage })))
-const TasksPage = lazy(() => import('./pages/TasksPage').then((m) => ({ default: m.TasksPage })))
+const DashboardPage = lazyPage(() => import('./pages/DashboardPage').then((m) => ({ default: m.DashboardPage })))
+const DealsBoardPage = lazyPage(() => import('./pages/DealsBoardPage').then((m) => ({ default: m.DealsBoardPage })))
+const DealPage = lazyPage(() => import('./pages/DealPage').then((m) => ({ default: m.DealPage })))
+const ClientsPage = lazyPage(() => import('./pages/ClientsPage').then((m) => ({ default: m.ClientsPage })))
+const PropertiesPage = lazyPage(() => import('./pages/PropertiesPage').then((m) => ({ default: m.PropertiesPage })))
+const TasksPage = lazyPage(() => import('./pages/TasksPage').then((m) => ({ default: m.TasksPage })))
 
 function NotFound() {
   const { t } = useTranslation()

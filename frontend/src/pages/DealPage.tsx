@@ -15,7 +15,9 @@ import { stageAccent } from '../lib/stages'
 import { AddTaskForm, TaskRow } from '../components/TaskList'
 import { useToast } from '../lib/toast'
 import { Avatar, Button, Card, EmptyState, ErrorState, Input, Modal, Select, Spinner, Textarea } from '../components/ui'
+import { useConfirm } from '../lib/confirm'
 import { formatDate, formatDateTime } from '../lib/format'
+import { useDocumentTitle } from '../lib/useDocumentTitle'
 
 function Section({ title, children, className }: { title: string; children: ReactNode; className?: string }) {
   return (
@@ -85,6 +87,8 @@ export function DealPage() {
   const remove = useDeleteDeal()
   const addNote = useAddNote(dealId)
 
+  const confirm = useConfirm()
+  useDocumentTitle(deal.data?.title ?? t('nav.deals'))
   const [editing, setEditing] = useState(false)
   const [note, setNote] = useState('')
   const [lostOpen, setLostOpen] = useState(false)
@@ -135,7 +139,7 @@ export function DealPage() {
   }
 
   async function onDelete() {
-    if (!window.confirm(t('deals.deleteConfirm'))) return
+    if (!(await confirm({ title: d.title, text: t('deals.deleteConfirm') }))) return
     try {
       await remove.mutateAsync(dealId)
       toast('success', t('common.deleted'))
@@ -250,7 +254,12 @@ export function DealPage() {
                 <UserRound className="size-5" />
               </span>
               <div>
-                <div className="font-medium text-slate-900">{d.client_info.name}</div>
+                <Link
+                  to={`/clients?open=${d.client}`}
+                  className="font-medium text-slate-900 hover:text-brand-700 hover:underline"
+                >
+                  {d.client_info.name}
+                </Link>
                 <a
                   href={`tel:${d.client_info.phone}`}
                   className="flex items-center gap-1 text-sm text-brand-700 hover:underline"
