@@ -1,3 +1,4 @@
+import clsx from 'clsx'
 import { AlertTriangle, CheckSquare, Clock, Percent, TrendingUp, Wallet } from 'lucide-react'
 import { type ReactNode, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -31,6 +32,7 @@ function Kpi({
   hint,
   hintTo,
   alert,
+  className,
 }: {
   icon: ReactNode
   label: string
@@ -38,9 +40,10 @@ function Kpi({
   hint?: string
   hintTo?: string
   alert?: { text: string; to: string }
+  className?: string
 }) {
   return (
-    <Card className="p-5">
+    <Card className={clsx('p-5', className)}>
       <div className="flex items-center gap-2 text-sm text-slate-500">
         <span className="rounded-lg bg-brand-50 p-1.5 text-brand-700">{icon}</span>
         {label}
@@ -114,8 +117,10 @@ export function DashboardPage() {
         }
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
+      {/* 5 cards that always fill the row: 2+2+1 on tablets, 3+2 on laptops, 5 in a row on wide screens */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-6 2xl:grid-cols-5">
         <Kpi
+          className="lg:col-span-2 2xl:col-span-1"
           icon={<Wallet className="size-4" />}
           label={t('dashboard.pipeline')}
           value={money(data.pipeline.amount, true)}
@@ -125,6 +130,7 @@ export function DashboardPage() {
           })}
         />
         <Kpi
+          className="lg:col-span-2 2xl:col-span-1"
           icon={<TrendingUp className="size-4" />}
           label={t('dashboard.wonThisMonth')}
           value={money(data.won_this_month.amount, true)}
@@ -134,12 +140,14 @@ export function DashboardPage() {
           })}
         />
         <Kpi
+          className="lg:col-span-2 2xl:col-span-1"
           icon={<Percent className="size-4" />}
           label={t('dashboard.conversion')}
           value={data.conversion_rate === null ? '—' : `${data.conversion_rate}%`}
           hint={t('dashboard.conversionHint')}
         />
         <Kpi
+          className="lg:col-span-3 2xl:col-span-1"
           icon={<Clock className="size-4" />}
           label={t('dashboard.avgDays')}
           value={
@@ -148,6 +156,7 @@ export function DashboardPage() {
           hint={t('dashboard.avgHint')}
         />
         <Kpi
+          className="sm:col-span-2 lg:col-span-3 2xl:col-span-1"
           icon={<CheckSquare className="size-4" />}
           label={t('dashboard.todayTasks')}
           value={String(data.tasks.today)}

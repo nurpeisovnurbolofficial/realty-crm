@@ -7,9 +7,10 @@ tasks and a dashboard with commission analytics. Managers work with their own de
 
 **Backend:** Python 3.12 · Django 5.2 · Django REST Framework · JWT (httpOnly cookies) · PostgreSQL · OpenAPI/Swagger
 **Frontend:** React 19 · TypeScript (strict) · Vite · Tailwind CSS · TanStack Query · dnd-kit · Recharts · i18next (RU/EN)
-**Quality:** 50 backend tests on PostgreSQL · 16 frontend tests (Vitest + Testing Library) · ruff · oxlint · Prettier · Docker · GitHub Actions
+**Quality:** 70 backend tests on PostgreSQL (incl. N+1 query guards) · 23 frontend tests (Vitest + Testing Library) · ruff · oxlint · Prettier · Docker · GitHub Actions
 
 > 🔗 **Live demo:** _coming soon_ — on the login page click **Head of sales** or **Manager** to try it without signing up.
+> It is a public demo: deleting is disabled and the data is recreated every time the server wakes up.
 
 ![Dashboard](docs/screenshots/dashboard.jpg)
 
@@ -31,11 +32,14 @@ tasks and a dashboard with commission analytics. Managers work with their own de
   reassigns deals, reopens closed ones and sees the team ranking.
 - **Property catalog** — sale and rent listings in Astana with filters (type, district, status, rooms, price).
 - **Deal page** — stage stepper, tasks, notes and an automatic history of every change.
-- **Tasks** — overdue / today / upcoming / done.
+- **Tasks** — overdue / today / upcoming / done, with counters on every tab.
 - **Dashboard** — open pipeline, won this month, conversion, average time to close, commission by month,
   pipeline by stage, reasons for lost deals, team ranking (head only), filter by manager.
 - **RU / EN** — the whole UI is translated; API errors come with a stable `code` that the frontend translates.
 - **API docs** — Swagger UI at `/api/docs/` generated from the code (schema validated in CI).
+- **UX details** — validation errors under the right field, styled confirm dialogs, accessible modals (focus trap,
+  Escape, focus returns to the trigger), client card with its deals, page titles, mobile layout, and an automatic
+  reload when a tab opened before a deploy asks for an old page file.
 
 ## Architecture
 
@@ -82,11 +86,14 @@ User (manager | head)
 |---|---|
 | Token theft via XSS | JWT access/refresh tokens live in **httpOnly cookies**; JavaScript never sees them |
 | CSRF (cookies are sent automatically) | Every unsafe request must carry Django's CSRF token header |
-| Long-lived stolen tokens | Access token lives 15 min; refresh token is rotated and sent only to `/api/auth/` |
-| Password brute force | Login is throttled to 5 attempts per minute per IP |
+| Long-lived stolen tokens | Access token lives 15 min; refresh token is rotated, sent only to `/api/auth/`, and revoked (blacklisted) on logout and after each use |
+| Password brute force | API login: 10 attempts per minute per IP; Django admin login: locked for 15 min after 5 failures. Counters live in the database cache, shared by all server processes |
 | Seeing other people's data | Querysets are filtered by role in one place (`services.visible_*`) |
 | Two deals taking one property | Row locks in a transaction + a partial unique constraint in the database |
 | Leaked secret key / public admin password | The app refuses to start without `DJANGO_SECRET_KEY`; admin password only from an env variable |
+| Vandalism on the public demo | Demo mode: deleting is disabled for everyone except a superuser, data is recreated on start |
+| Inconsistent data from manual edits | A reserved property cannot be released by hand; the sale/rent type is locked while deals are open |
+| Downgrade to HTTP | HTTPS redirect, secure cookies and HSTS in production |
 
 ## Run locally
 
@@ -103,6 +110,7 @@ cd backend
 python -m venv .venv && .venv\Scripts\activate     # macOS/Linux: source .venv/bin/activate
 pip install -r requirements-dev.txt
 python manage.py migrate
+python manage.py createcachetable                   # cache table for login attempt counters
 python manage.py seed_demo                          # demo agency in Astana
 python manage.py runserver
 ```
@@ -135,6 +143,9 @@ Deployed on [Render](https://render.com) with PostgreSQL on [Neon](https://neon.
 | `DJANGO_SECRET_KEY` | required in production |
 | `DJANGO_DEBUG` | `0` in production |
 | `DJANGO_ADMIN_PASSWORD` | password of the `admin` account for `/admin/` |
+| `DJANGO_DEMO_MODE` | `1` (default): public demo. `0`: a real agency — no demo logins, data is never reset |
+
+Health check for the hosting platform: `GET /api/health/` (checks the database).
 
 ## Roadmap
 
