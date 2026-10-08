@@ -2,8 +2,9 @@
 Fill the database with a realistic demo agency in Astana.
 
 Usage:
-    python manage.py seed_demo           # only if the database has no deals yet
-    python manage.py seed_demo --reset   # wipe CRM data and create it again
+    python manage.py seed_demo             # only if the database has no deals yet
+    python manage.py seed_demo --reset     # wipe CRM data and create it again
+    python manage.py seed_demo --startup   # on server start: reset on the public demo, else like the first
 
 Dates are relative to "now", so the dashboard always shows the last six months.
 """
@@ -72,8 +73,16 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('--reset', action='store_true', help='Delete existing CRM data first.')
+        parser.add_argument(
+            '--startup',
+            action='store_true',
+            help='Used when the server starts: on the public demo (DJANGO_DEMO_MODE=1) recreate the data, '
+            'otherwise only create it if the database is empty.',
+        )
 
     def handle(self, *args, **options):
+        if options['startup'] and settings.DEMO_MODE:
+            options['reset'] = True
         if options['reset']:
             Deal.objects.all().delete()  # tasks and activities are deleted by cascade
             Task.objects.all().delete()

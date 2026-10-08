@@ -32,4 +32,5 @@ USER appuser
 
 EXPOSE 8000
 # Render passes the port in $PORT. Migrations run on start: safe for a single instance.
-CMD ["sh", "-c", "python manage.py migrate --no-input && python manage.py seed_demo && gunicorn config.wsgi:application --bind 0.0.0.0:${PORT:-8000} --workers 2"]
+# On the public demo, seed_demo --startup recreates the demo data after every restart.
+CMD ["sh", "-c", "python manage.py migrate --no-input && python manage.py createcachetable && python manage.py seed_demo --startup && gunicorn config.wsgi:application --bind 0.0.0.0:${PORT:-8000} --workers 2"]
