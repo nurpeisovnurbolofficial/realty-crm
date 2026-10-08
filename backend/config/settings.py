@@ -181,6 +181,14 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 FRONTEND_DIST = Path(os.environ.get('FRONTEND_DIST', BASE_DIR.parent / 'frontend' / 'dist'))
 WHITENOISE_ROOT = FRONTEND_DIST if FRONTEND_DIST.exists() else None
 
+
+def _immutable_file(path, url):
+    # Vite puts a content hash into every file name in /assets/, so browsers may cache them forever.
+    return url.startswith('/assets/') or url.startswith(f'/{STATIC_URL}')
+
+
+WHITENOISE_IMMUTABLE_FILE_TEST = _immutable_file
+
 STORAGES = {
     'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
     'staticfiles': {'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage'},
