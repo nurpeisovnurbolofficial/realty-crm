@@ -8,6 +8,7 @@ Key rules:
 - one property cannot be under contract in two deals at the same time.
 """
 
+from django.conf import settings
 from django.db import IntegrityError, transaction
 from django.utils import timezone
 
@@ -21,6 +22,12 @@ class DealError(Exception):
         super().__init__(message)
         self.code = code
         self.message = message
+
+
+def check_delete_allowed(user):
+    """On the public demo nobody (except a superuser) can delete data, so the next visitor sees a full CRM."""
+    if settings.DEMO_MODE and not user.is_superuser:
+        raise DealError('demo_readonly', 'Deleting is disabled in the public demo.')
 
 
 # --- Visibility ---------------------------------------------------------------

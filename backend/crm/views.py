@@ -1,6 +1,7 @@
 from datetime import timedelta
 
 from django.conf import settings
+from django.db import DatabaseError, connection
 from django.db.models import Count, Q
 from django.http import FileResponse, Http404
 from django.utils import timezone
@@ -12,9 +13,8 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from accounts.models import User
-
 from . import analytics, services
+from .exceptions import api_error
 from .filters import ClientFilter, DealFilter, PropertyFilter, TaskFilter
 from .models import Client, Deal, Property, Task
 from .serializers import (
@@ -45,6 +45,7 @@ class ClientViewSet(viewsets.ModelViewSet):
         serializer.save(owner=serializer.validated_data.get('owner', self.request.user))
 
     def perform_destroy(self, instance):
+        services.check_delete_allowed(self.request.user)
         if instance.deals.exists():
             raise services.DealError('client_has_deals', 'This client has deals and cannot be deleted.')
         instance.delete()
@@ -69,6 +70,7 @@ class PropertyViewSet(viewsets.ModelViewSet):
         serializer.save(agent=serializer.validated_data.get('agent', self.request.user))
 
     def perform_destroy(self, instance):
+        services.check_delete_allowed(self.request.user)
         if instance.deals.exists():
             raise services.DealError('property_has_deals', 'This property is used in deals and cannot be deleted.')
         instance.delete()
@@ -103,6 +105,7 @@ class DealViewSet(viewsets.ModelViewSet):
     def perform_destroy(self, instance):
         if not self.request.user.is_head:
             raise PermissionDenied('Only the head of sales can delete deals.')
+        services.check_delete_allowed(self.request.user)
         if instance.stage in services.STAGES_HOLDING_PROPERTY:
             raise services.DealError('property_locked', 'Move the deal back from the contract stage first.')
         instance.delete()
@@ -169,6 +172,10 @@ class TaskViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(assignee=serializer.validated_data.get('assignee', self.request.user))
 
+    def perform_destroy(self, instance):
+        services.check_delete_allowed(self.request.user)
+        instance.delete()
+
     @extend_schema(request=None, responses=TaskSerializer)
     @action(detail=True, methods=['post'])
     def complete(self, request, pk=None):
@@ -191,8 +198,10 @@ class DashboardView(APIView):
         user = request.user
         deals = services.visible_deals(user)
         tasks = services.visible_tasks(user)
-        owner_id = request.query_params.get('owner')
+        owner_id = request.query_params.get('owner', '')
         if owner_id and user.is_head:
+            if not owner_id.isdigit():
+                return api_error('invalid_filter', 'The "owner" filter must be a user id.')
             deals = deals.filter(owner_id=owner_id)
             tasks = tasks.filter(assignee_id=owner_id)
 
@@ -201,23 +210,20 @@ class DashboardView(APIView):
         return Response(data)
 
 
-class MetaView(APIView):
-    """Choice lists for forms and filters, so the frontend does not hard-code them."""
+class HealthView(APIView):
+    """Liveness check for the hosting platform: the app is up and the database answers."""
 
-    @extend_schema(responses={200: dict})
+    authentication_classes = []
+    permission_classes = [permissions.AllowAny]
+
+    @extend_schema(responses={200: dict, 503: dict})
     def get(self, request):
-        return Response(
-            {
-                'deal_stages': Deal.Stage.values,
-                'deal_types': [c for c, _ in Deal._meta.get_field('deal_type').choices],
-                'property_kinds': Property.Kind.values,
-                'property_statuses': Property.Status.values,
-                'districts': Property.District.values,
-                'client_kinds': Client.Kind.values,
-                'client_sources': Client.Source.values,
-                'managers': list(User.objects.filter(is_active=True).values('id', 'first_name', 'last_name', 'role')),
-            }
-        )
+        try:
+            with connection.cursor() as cursor:
+                cursor.execute('SELECT 1')
+        except DatabaseError:
+            return Response({'status': 'error', 'database': 'unavailable'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        return Response({'status': 'ok'})
 
 
 @ensure_csrf_cookie
@@ -226,4 +232,7 @@ def spa(request, *args, **kwargs):
     index = settings.FRONTEND_DIST / 'index.html'
     if not index.exists():
         raise Http404('Frontend is not built. Run `npm run build` in frontend/ or use the Vite dev server.')
-    return FileResponse(index.open('rb'), content_type='text/html')
+    response = FileResponse(index.open('rb'), content_type='text/html')
+    # Always ask the server for a fresh index.html: after a deploy it points to new asset files.
+    response['Cache-Control'] = 'no-cache'
+    return response

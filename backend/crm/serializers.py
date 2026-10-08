@@ -74,9 +74,18 @@ class PropertySerializer(OwnerFieldMixin, serializers.ModelSerializer):
         return user.is_head or obj.agent_id == user.id
 
     def validate_status(self, value):
-        # Reserved is set only by the deal pipeline, never by hand.
-        if value == Property.Status.RESERVED and (self.instance is None or self.instance.status != value):
+        # "Reserved" belongs to the deal pipeline: it cannot be set by hand, and a reserved
+        # property cannot be released by hand while a deal holds it under contract.
+        current = self.instance.status if self.instance else None
+        if value != current and Property.Status.RESERVED in (value, current):
             raise DealError('status_managed_by_deals', 'The "reserved" status is set automatically by deals.')
+        return value
+
+    def validate_deal_type(self, value):
+        # Switching sale <-> rent would break deals that already work with this property.
+        if self.instance and value != self.instance.deal_type:
+            if self.instance.deals.exclude(stage__in=Deal.CLOSED_STAGES).exists():
+                raise DealError('property_in_use', 'The property is used in open deals: its deal type cannot change.')
         return value
 
 
@@ -128,6 +137,9 @@ class DealSerializer(OwnerFieldMixin, serializers.ModelSerializer):
         validators = []
 
     def validate_client(self, client):
+        # The deal's current client is always fine: the head may have reassigned the deal to this manager.
+        if self.instance and client.pk == self.instance.client_id:
+            return client
         # A manager cannot attach someone else's client (and cannot learn that it exists).
         if not visible_clients(self.context['request'].user).filter(pk=client.pk).exists():
             raise serializers.ValidationError('Client not found.')
