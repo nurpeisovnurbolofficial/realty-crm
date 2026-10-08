@@ -1,0 +1,32 @@
+# The whole app with PostgreSQL in one command:
+#   docker compose up --build
+# Then open http://localhost:8000
+
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: realty
+      POSTGRES_USER: realty
+      POSTGRES_PASSWORD: realty # local development only
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U realty -d realty']
+      interval: 3s
+      retries: 10
+
+  web:
+    build: .
+    environment:
+      DATABASE_URL: postgres://realty:realty@db:5432/realty
+      DJANGO_DEBUG: '1'
+      DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1
+    ports:
+      - '8000:8000'
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
