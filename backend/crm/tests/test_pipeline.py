@@ -31,7 +31,7 @@ class PipelineTests(TestCase):
 
     def test_lost_requires_a_reason(self):
         deal = f.deal(self.manager)
-        self.assertCode('lost_reason_required', move_deal, deal, 'lost', self.manager, lost_reason='   ')
+        self.assertCode('lost_reason_required', move_deal, deal, 'lost', self.manager, lost_reason='')
 
     def test_contract_reserves_the_property_and_won_sells_it(self):
         deal = f.deal(self.manager, property_obj=self.flat)
@@ -61,7 +61,7 @@ class PipelineTests(TestCase):
     def test_losing_a_deal_under_contract_releases_the_property(self):
         deal = f.deal(self.manager, property_obj=self.flat)
         move_deal(deal, 'contract', self.manager)
-        move_deal(deal, 'lost', self.manager, lost_reason='Mortgage was not approved')
+        move_deal(deal, 'lost', self.manager, lost_reason='mortgage')
         self.flat.refresh_from_db()
         self.assertEqual(self.flat.status, Property.Status.AVAILABLE)
 
@@ -81,7 +81,7 @@ class PipelineTests(TestCase):
 
     def test_manager_cannot_change_a_closed_deal_but_head_can(self):
         deal = f.deal(self.manager)
-        move_deal(deal, 'lost', self.manager, lost_reason='Price too high')
+        move_deal(deal, 'lost', self.manager, lost_reason='price')
         self.assertCode('reopen_requires_head', move_deal, deal, 'contacted', self.manager)
 
         deal = move_deal(deal, 'contacted', self.head)
@@ -106,3 +106,20 @@ class PipelineTests(TestCase):
     def test_commission(self):
         deal = f.deal(self.manager, amount=40_000_000)
         self.assertEqual(deal.commission, 1_200_000)  # 3% by default
+
+    def test_lost_reason_must_come_from_the_list(self):
+        deal = f.deal(self.manager)
+        self.assertCode('lost_reason_required', move_deal, deal, 'lost', self.manager, lost_reason='too expensive')
+
+    def test_other_reason_needs_a_comment(self):
+        deal = f.deal(self.manager)
+        self.assertCode('lost_comment_required', move_deal, deal, 'lost', self.manager, lost_reason='other')
+        deal = move_deal(deal, 'lost', self.manager, lost_reason='other', lost_comment='Moved to another city')
+        self.assertEqual((deal.lost_reason, deal.lost_comment), ('other', 'Moved to another city'))
+
+    def test_lost_reason_code_is_kept_in_history(self):
+        deal = f.deal(self.manager)
+        move_deal(deal, 'lost', self.manager, lost_reason='mortgage', lost_comment='Bank refused')
+        activity = Activity.objects.get(deal=deal, kind=Activity.Kind.STAGE)
+        self.assertEqual(activity.data, {'from': 'new', 'to': 'lost', 'reason': 'mortgage'})
+        self.assertEqual(activity.text, 'Bank refused')

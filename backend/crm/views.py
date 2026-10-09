@@ -136,7 +136,13 @@ class DealViewSet(viewsets.ModelViewSet):
         serializer = MoveDealSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
-        deal = services.move_deal(self.get_object(), data['stage'], request.user, lost_reason=data['lost_reason'])
+        deal = services.move_deal(
+            self.get_object(),
+            data['stage'],
+            request.user,
+            lost_reason=data['lost_reason'],
+            lost_comment=data['lost_comment'],
+        )
         return Response(DealSerializer(deal, context=self.get_serializer_context()).data)
 
     @extend_schema(request=ChangeOwnerSerializer, responses=DealSerializer)

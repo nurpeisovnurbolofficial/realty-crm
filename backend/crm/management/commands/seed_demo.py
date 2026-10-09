@@ -52,11 +52,11 @@ COMPANIES = [
 ]
 
 LOST_REASONS = [
-    'Price too high',
-    'Chose another agency',
-    'Mortgage was not approved',
-    'Changed their mind',
-    'Found a property on their own',
+    Deal.LostReason.PRICE,
+    Deal.LostReason.OTHER_AGENCY,
+    Deal.LostReason.MORTGAGE,
+    Deal.LostReason.CHANGED_MIND,
+    Deal.LostReason.FOUND_THEMSELVES,
 ]
 
 NOTES = [
@@ -224,7 +224,7 @@ class Command(BaseCommand):
         end = closed or self.now - timedelta(hours=self.rng.randint(1, 20))
         events = [(Activity.Kind.CREATED, {}, '')]
         events += [
-            (Activity.Kind.STAGE, {'from': prev, 'to': cur}, lost_reason if cur == 'lost' else '')
+            (Activity.Kind.STAGE, {'from': prev, 'to': cur, **({'reason': lost_reason} if cur == 'lost' else {})}, '')
             for prev, cur in zip(path, path[1:], strict=False)
         ]
         if self.rng.random() < 0.6:

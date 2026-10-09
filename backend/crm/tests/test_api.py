@@ -125,7 +125,7 @@ class DealApiTests(ApiTestCase):
     def test_board_groups_deals_by_stage_and_hides_old_closed_deals(self):
         f.deal(self.manager, title='Fresh')
         old = f.deal(self.manager, title='Old lost')
-        move_deal(old, 'lost', self.manager, lost_reason='Price')
+        move_deal(old, 'lost', self.manager, lost_reason='price')
         Deal.objects.filter(pk=old.pk).update(closed_at=timezone.now() - timedelta(days=45))
 
         self.login(self.manager)
@@ -214,7 +214,7 @@ class DashboardTests(ApiTestCase):
         won = f.deal(self.manager, property_obj=flat, amount=50_000_000)
         move_deal(won, 'won', self.manager)
         lost = f.deal(self.manager)
-        move_deal(lost, 'lost', self.manager, lost_reason='Price too high')
+        move_deal(lost, 'lost', self.manager, lost_reason='price')
         f.deal(self.manager, amount=20_000_000)  # still in the pipeline
 
         self.login(self.manager)
@@ -223,7 +223,7 @@ class DashboardTests(ApiTestCase):
         self.assertEqual(data['won_this_month']['commission'], 1_500_000)
         self.assertEqual(data['pipeline']['amount'], 20_000_000)
         self.assertEqual(data['conversion_rate'], 50.0)
-        self.assertEqual(data['lost_reasons'], [{'reason': 'Price too high', 'count': 1}])
+        self.assertEqual(data['lost_reasons'], [{'reason': 'price', 'count': 1}])
         self.assertEqual(len(data['monthly']), 6)
         self.assertIsNone(data['leaderboard'])  # managers do not see the team ranking
 

@@ -101,6 +101,15 @@ class Deal(models.Model):
         WON = 'won', 'Closed won'
         LOST = 'lost', 'Lost'
 
+    class LostReason(models.TextChoices):
+        # A fixed list (not free text) so that the dashboard can group reasons and translate them.
+        PRICE = 'price', 'Price too high'
+        OTHER_AGENCY = 'other_agency', 'Chose another agency'
+        MORTGAGE = 'mortgage', 'Mortgage was not approved'
+        CHANGED_MIND = 'changed_mind', 'Changed their mind'
+        FOUND_THEMSELVES = 'found_themselves', 'Found a property on their own'
+        OTHER = 'other', 'Other'
+
     CLOSED_STAGES = (Stage.WON, Stage.LOST)
 
     title = models.CharField(max_length=150)
@@ -116,7 +125,8 @@ class Deal(models.Model):
         validators=[MinValueValidator(Decimal('0')), MaxValueValidator(Decimal('100'))],
     )
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='deals')
-    lost_reason = models.CharField(max_length=200, blank=True)
+    lost_reason = models.CharField(max_length=20, choices=LostReason.choices, blank=True)
+    lost_comment = models.CharField(max_length=200, blank=True, help_text='Details, required for "Other".')
     expected_close_date = models.DateField(null=True, blank=True)
     closed_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)

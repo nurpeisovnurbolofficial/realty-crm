@@ -74,7 +74,7 @@ def create_deal(user, **fields):
     return deal
 
 
-def move_deal(deal, new_stage, user, lost_reason=''):
+def move_deal(deal, new_stage, user, lost_reason='', lost_comment=''):
     """
     Move a deal to another stage of the pipeline, keeping the property status in sync.
 
@@ -100,8 +100,11 @@ def move_deal(deal, new_stage, user, lost_reason=''):
                 raise DealError('property_required', 'Attach a property before moving the deal to this stage.')
             if new_stage in STAGES_HOLDING_PROPERTY and deal.amount <= 0:
                 raise DealError('amount_required', 'Set the deal amount before the contract stage.')
-            if new_stage == Deal.Stage.LOST and not lost_reason.strip():
-                raise DealError('lost_reason_required', 'Tell why the deal was lost.')
+            if new_stage == Deal.Stage.LOST:
+                if lost_reason not in Deal.LostReason.values:
+                    raise DealError('lost_reason_required', 'Tell why the deal was lost.')
+                if lost_reason == Deal.LostReason.OTHER and not lost_comment.strip():
+                    raise DealError('lost_comment_required', 'Describe the reason in a comment.')
             check_property_matches(deal.deal_type, prop)
 
             held_before = old_stage in STAGES_HOLDING_PROPERTY
@@ -123,16 +126,22 @@ def move_deal(deal, new_stage, user, lost_reason=''):
             deal.stage = new_stage
             if new_stage in Deal.CLOSED_STAGES:
                 deal.closed_at = timezone.now()
-                deal.lost_reason = lost_reason.strip() if new_stage == Deal.Stage.LOST else ''
+                is_lost = new_stage == Deal.Stage.LOST
+                deal.lost_reason = lost_reason if is_lost else ''
+                deal.lost_comment = lost_comment.strip() if is_lost else ''
             else:
                 deal.closed_at = None
                 deal.lost_reason = ''
+                deal.lost_comment = ''
             deal.save()
     except IntegrityError:
         # The database constraint caught a race: another deal took this property a moment ago.
         raise DealError('property_unavailable', 'This property is already reserved, sold or rented.') from None
 
-    _log(deal, user, Activity.Kind.STAGE, text=deal.lost_reason, **{'from': old_stage, 'to': new_stage})
+    data = {'from': old_stage, 'to': new_stage}
+    if deal.lost_reason:
+        data['reason'] = deal.lost_reason  # a code: the frontend shows it in the user's language
+    _log(deal, user, Activity.Kind.STAGE, text=deal.lost_comment, **data)
     return deal
 
 

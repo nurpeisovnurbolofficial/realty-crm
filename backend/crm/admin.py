@@ -28,7 +28,7 @@ class DealAdmin(admin.ModelAdmin):
     list_filter = ['stage', 'deal_type', 'owner']
     search_fields = ['title', 'client__name']
     # The stage is read-only here: it must go through services.move_deal to keep property statuses correct.
-    readonly_fields = ['stage', 'closed_at', 'lost_reason']
+    readonly_fields = ['stage', 'closed_at', 'lost_reason', 'lost_comment']
     inlines = [TaskInline]
 
 

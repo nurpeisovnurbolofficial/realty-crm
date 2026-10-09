@@ -128,10 +128,10 @@ class DealSerializer(OwnerFieldMixin, serializers.ModelSerializer):
         model = Deal
         fields = [
             'id', 'title', 'client', 'client_info', 'property', 'property_info', 'deal_type', 'stage',
-            'amount', 'commission_percent', 'commission', 'owner', 'owner_info', 'lost_reason',
+            'amount', 'commission_percent', 'commission', 'owner', 'owner_info', 'lost_reason', 'lost_comment',
             'expected_close_date', 'closed_at', 'created_at', 'updated_at',
         ]  # fmt: skip
-        read_only_fields = ['stage', 'lost_reason', 'closed_at']
+        read_only_fields = ['stage', 'lost_reason', 'lost_comment', 'closed_at']
         # DRF would turn the conditional DB constraint into a "property is required" rule.
         # The constraint is enforced by services.move_deal and the database itself.
         validators = []
@@ -165,7 +165,8 @@ class DealSerializer(OwnerFieldMixin, serializers.ModelSerializer):
 
 class MoveDealSerializer(serializers.Serializer):
     stage = serializers.ChoiceField(choices=Deal.Stage.choices)
-    lost_reason = serializers.CharField(required=False, allow_blank=True, max_length=200, default='')
+    lost_reason = serializers.ChoiceField(choices=Deal.LostReason.choices, required=False, allow_blank=True, default='')
+    lost_comment = serializers.CharField(required=False, allow_blank=True, max_length=200, default='')
 
 
 class ChangeOwnerSerializer(serializers.Serializer):
