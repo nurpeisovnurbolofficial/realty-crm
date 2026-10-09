@@ -272,7 +272,7 @@ export function DashboardPage() {
                 return (
                   <li key={row.reason}>
                     <div className="mb-1 flex justify-between text-sm">
-                      <span className="text-slate-700">{row.reason}</span>
+                      <span className="text-slate-700">{t(`lostReasons.${row.reason}`)}</span>
                       <span className="font-medium text-slate-900">{row.count}</span>
                     </div>
                     <div className="h-2 rounded-full bg-slate-100">

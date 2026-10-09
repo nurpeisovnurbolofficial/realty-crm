@@ -16,6 +16,15 @@ export const DISTRICTS: District[] = ['esil', 'almaty', 'saryarka', 'baikonyr', 
 export const PROPERTY_KINDS: PropertyKind[] = ['apartment', 'house', 'commercial', 'land']
 export const PROPERTY_STATUSES: PropertyStatus[] = ['available', 'reserved', 'sold', 'rented']
 export const CLIENT_SOURCES: ClientSource[] = ['website', 'krisha', 'referral', 'call', 'social', 'other']
+export type LostReason = 'price' | 'other_agency' | 'mortgage' | 'changed_mind' | 'found_themselves' | 'other'
+export const LOST_REASONS: LostReason[] = [
+  'price',
+  'other_agency',
+  'mortgage',
+  'changed_mind',
+  'found_themselves',
+  'other',
+]
 
 export interface Paginated<T> {
   count: number
@@ -127,7 +136,8 @@ export interface Deal {
   commission: number
   owner: number
   owner_info: UserShort
-  lost_reason: string
+  lost_reason: LostReason | ''
+  lost_comment: string
   expected_close_date: string | null
   closed_at: string | null
   created_at: string
@@ -154,7 +164,7 @@ export interface Activity {
   id: number
   kind: ActivityKind
   text: string
-  data: { from?: string; to?: string }
+  data: { from?: string; to?: string; reason?: LostReason }
   author: UserShort | null
   created_at: string
 }
@@ -172,7 +182,7 @@ export interface Dashboard {
   avg_days_to_close: number | null
   by_stage: { stage: Stage; count: number; amount: number }[]
   monthly: { month: string; won_count: number; amount: number; commission: number }[]
-  lost_reasons: { reason: string; count: number }[]
+  lost_reasons: { reason: LostReason; count: number }[]
   tasks: { overdue: number; today: number }
   leaderboard:
     | { id: number; name: string; won_count: number; won_amount: number; commission: number; active_deals: number }[]

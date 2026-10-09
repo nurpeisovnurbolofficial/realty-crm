@@ -15,6 +15,7 @@ import type {
   Dashboard,
   Deal,
   DealListItem,
+  LostReason,
   DemoAccount,
   Paginated,
   Property,
@@ -129,14 +130,24 @@ function useInvalidateDeals() {
  * Move a deal on the Kanban board with an *optimistic update*:
  * the card jumps to the new column immediately, and jumps back if the server says no.
  */
+interface MoveVars {
+  id: number
+  stage: Stage
+  lostReason?: LostReason
+  lostComment?: string
+}
+
 export function useMoveDeal(boardFilters: Filters) {
   const queryClient = useQueryClient()
   const invalidate = useInvalidateDeals()
   const boardKey = keys.board(boardFilters)
 
   return useMutation({
-    mutationFn: ({ id, stage, lostReason }: { id: number; stage: Stage; lostReason?: string }) =>
-      api<Deal>(`/api/deals/${id}/move/`, { method: 'POST', body: { stage, lost_reason: lostReason ?? '' } }),
+    mutationFn: ({ id, stage, lostReason, lostComment }: MoveVars) =>
+      api<Deal>(`/api/deals/${id}/move/`, {
+        method: 'POST',
+        body: { stage, lost_reason: lostReason ?? '', lost_comment: lostComment ?? '' },
+      }),
     onMutate: async ({ id, stage }) => {
       await queryClient.cancelQueries({ queryKey: boardKey })
       const previous = queryClient.getQueryData<Board>(boardKey)

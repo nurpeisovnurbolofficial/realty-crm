@@ -9,12 +9,13 @@ import { useActivities, useAddNote, useDeal, useDealAction, useDeleteDeal, useTa
 import { type Activity, type Stage, STAGES } from '../api/types'
 import { useAuth } from '../auth/context'
 import { DealForm } from '../components/DealForm'
+import { LostDealModal } from '../components/LostDealModal'
 import { PropertyKindIcon, StageBadge } from '../components/domain'
 import { useErrorText, useMoney } from '../lib/hooks'
 import { stageAccent } from '../lib/stages'
 import { AddTaskForm, TaskRow } from '../components/TaskList'
 import { useToast } from '../lib/toast'
-import { Avatar, Button, Card, EmptyState, ErrorState, Input, Modal, Select, Spinner, Textarea } from '../components/ui'
+import { Avatar, Button, Card, EmptyState, ErrorState, Select, Spinner, Textarea } from '../components/ui'
 import { useConfirm } from '../lib/confirm'
 import { formatDate, formatDateTime } from '../lib/format'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
@@ -41,9 +42,10 @@ function ActivityItem({ activity }: { activity: Activity }) {
   const { t, i18n } = useTranslation()
   const translateStage = (value?: string) => (value ? t(`stages.${value}`, { defaultValue: value }) : '')
   let text: string
-  if (activity.kind === 'stage')
+  if (activity.kind === 'stage') {
     text = t('activity.stage', { from: translateStage(activity.data.from), to: translateStage(activity.data.to) })
-  else if (activity.kind === 'owner') text = t('activity.owner', { from: activity.data.from, to: activity.data.to })
+    if (activity.data.reason) text += ` · ${t(`lostReasons.${activity.data.reason}`)}`
+  } else if (activity.kind === 'owner') text = t('activity.owner', { from: activity.data.from, to: activity.data.to })
   else text = t(`activity.${activity.kind}`)
 
   return (
@@ -92,7 +94,6 @@ export function DealPage() {
   const [editing, setEditing] = useState(false)
   const [note, setNote] = useState('')
   const [lostOpen, setLostOpen] = useState(false)
-  const [lostReason, setLostReason] = useState('')
 
   if (deal.isLoading) return <Spinner />
   if (deal.error instanceof ApiError && deal.error.status === 404) {
@@ -109,9 +110,9 @@ export function DealPage() {
   const d = deal.data
   const closedForMe = (d.stage === 'won' || d.stage === 'lost') && !user?.is_head
 
-  function moveTo(stage: Stage, reason = '') {
+  function moveTo(stage: Stage, reason = '', comment = '') {
     action.mutate(
-      { id: dealId, action: 'move', body: { stage, lost_reason: reason } },
+      { id: dealId, action: 'move', body: { stage, lost_reason: reason, lost_comment: comment } },
       {
         onSuccess: () => toast('success', t('deals.moved', { stage: t(`stages.${stage}`) })),
         onError: (error) => toast('error', errorText(error)),
@@ -122,7 +123,6 @@ export function DealPage() {
   function onStageClick(stage: Stage) {
     if (stage === d.stage) return
     if (stage === 'lost') {
-      setLostReason('')
       setLostOpen(true)
     } else moveTo(stage)
   }
@@ -218,7 +218,8 @@ export function DealPage() {
             <div className="mt-3 divide-y divide-slate-100">
               <Row label={t('deals.expectedClose')}>{formatDate(d.expected_close_date, i18n.language)}</Row>
               {d.closed_at && <Row label={t('deals.closedAt')}>{formatDate(d.closed_at, i18n.language)}</Row>}
-              {d.lost_reason && <Row label={t('deals.lostReason')}>{d.lost_reason}</Row>}
+              {d.lost_reason && <Row label={t('deals.lostReason')}>{t(`lostReasons.${d.lost_reason}`)}</Row>}
+              {d.lost_comment && <Row label={t('deals.comment')}>{d.lost_comment}</Row>}
               <Row label={t('deals.owner')}>
                 <span className="inline-flex items-center gap-2">
                   <Avatar name={d.owner_info.display_name} className="size-6 text-[10px]" />
@@ -337,36 +338,16 @@ export function DealPage() {
 
       {editing && <DealForm onClose={() => setEditing(false)} deal={d} />}
 
-      <Modal
-        open={lostOpen}
-        onClose={() => setLostOpen(false)}
-        title={t('deals.lostTitle')}
-        footer={
-          <>
-            <Button variant="secondary" onClick={() => setLostOpen(false)}>
-              {t('common.cancel')}
-            </Button>
-            <Button
-              variant="danger"
-              disabled={!lostReason.trim()}
-              onClick={() => {
-                moveTo('lost', lostReason)
-                setLostOpen(false)
-              }}
-            >
-              {t('stages.lost')}
-            </Button>
-          </>
-        }
-      >
-        <Input
-          autoFocus
-          value={lostReason}
-          onChange={(e) => setLostReason(e.target.value)}
-          placeholder={t('deals.lostPlaceholder')}
-          maxLength={200}
+      {lostOpen && (
+        <LostDealModal
+          dealTitle={d.title}
+          onCancel={() => setLostOpen(false)}
+          onConfirm={(reason, comment) => {
+            moveTo('lost', reason, comment)
+            setLostOpen(false)
+          }}
         />
-      </Modal>
+      )}
     </>
   )
 }

@@ -21,18 +21,19 @@ import {
 import { CSS } from '@dnd-kit/utilities'
 import clsx from 'clsx'
 import { CalendarDays, CheckSquare, Home, Lock, Plus, Search } from 'lucide-react'
-import { type FormEvent, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 
 import { useBoard, useMoveDeal, useUsers } from '../api/hooks'
-import { type DealListItem, type Stage, STAGES } from '../api/types'
+import { type DealListItem, type LostReason, type Stage, STAGES } from '../api/types'
 import { useAuth } from '../auth/context'
 import { DealForm } from '../components/DealForm'
+import { LostDealModal } from '../components/LostDealModal'
 import { useErrorText, useMoney } from '../lib/hooks'
 import { stageAccent } from '../lib/stages'
 import { useToast } from '../lib/toast'
-import { Avatar, Button, ErrorState, Input, Modal, PageHeader, Segmented, Select, Spinner } from '../components/ui'
+import { Avatar, Button, ErrorState, PageHeader, Segmented, Select, Spinner } from '../components/ui'
 import { formatDate } from '../lib/format'
 import { useDebounced } from '../lib/useDebounced'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
@@ -158,7 +159,6 @@ export function DealsBoardPage() {
 
   const [active, setActive] = useState<DealListItem | null>(null)
   const [lostDeal, setLostDeal] = useState<DealListItem | null>(null)
-  const [lostReason, setLostReason] = useState('')
   const [creating, setCreating] = useState(false)
 
   // A small movement threshold, so a simple click still opens the deal instead of starting a drag.
@@ -168,9 +168,9 @@ export function DealsBoardPage() {
     useSensor(KeyboardSensor),
   )
 
-  function doMove(deal: DealListItem, stage: Stage, reason?: string) {
+  function doMove(deal: DealListItem, stage: Stage, lostReason?: LostReason, lostComment?: string) {
     move.mutate(
-      { id: deal.id, stage, lostReason: reason },
+      { id: deal.id, stage, lostReason, lostComment },
       {
         onSuccess: () => toast('success', t('deals.moved', { stage: t(`stages.${stage}`) })),
         onError: (error) => toast('error', errorText(error)),
@@ -188,17 +188,10 @@ export function DealsBoardPage() {
     const stage = event.over?.id as Stage | undefined
     if (!stage || stage === deal.stage) return
     if (stage === 'lost') {
-      setLostReason('')
       setLostDeal(deal) // ask for the reason first
       return
     }
     doMove(deal, stage)
-  }
-
-  function confirmLost(event: FormEvent) {
-    event.preventDefault()
-    if (lostDeal) doMove(lostDeal, 'lost', lostReason)
-    setLostDeal(null)
   }
 
   return (
@@ -264,32 +257,16 @@ export function DealsBoardPage() {
         </DndContext>
       )}
 
-      <Modal
-        open={lostDeal !== null}
-        onClose={() => setLostDeal(null)}
-        title={t('deals.lostTitle')}
-        footer={
-          <>
-            <Button variant="secondary" onClick={() => setLostDeal(null)}>
-              {t('common.cancel')}
-            </Button>
-            <Button type="submit" form="lost-form" variant="danger" disabled={!lostReason.trim()}>
-              {t('stages.lost')}
-            </Button>
-          </>
-        }
-      >
-        <form id="lost-form" onSubmit={confirmLost}>
-          <p className="mb-3 text-sm text-slate-600">{lostDeal?.title}</p>
-          <Input
-            autoFocus
-            value={lostReason}
-            onChange={(e) => setLostReason(e.target.value)}
-            placeholder={t('deals.lostPlaceholder')}
-            maxLength={200}
-          />
-        </form>
-      </Modal>
+      {lostDeal && (
+        <LostDealModal
+          dealTitle={lostDeal.title}
+          onCancel={() => setLostDeal(null)}
+          onConfirm={(reason, comment) => {
+            doMove(lostDeal, 'lost', reason, comment)
+            setLostDeal(null)
+          }}
+        />
+      )}
 
       {creating && <DealForm onClose={() => setCreating(false)} />}
     </>

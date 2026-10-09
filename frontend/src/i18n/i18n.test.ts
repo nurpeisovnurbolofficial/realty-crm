@@ -33,6 +33,7 @@ describe('translations', () => {
       'demo_readonly',
       'property_in_use',
       'invalid_filter',
+      'lost_comment_required',
     ]
     for (const code of backendCodes) {
       expect(en.errors).toHaveProperty(code)
