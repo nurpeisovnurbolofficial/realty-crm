@@ -9,8 +9,11 @@ tasks and a dashboard with commission analytics. Managers work with their own de
 **Frontend:** React 19 · TypeScript (strict) · Vite · Tailwind CSS · TanStack Query · dnd-kit · Recharts · i18next (RU/EN)
 **Quality:** 70 backend tests on PostgreSQL (incl. N+1 query guards) · 23 frontend tests (Vitest + Testing Library) · ruff · oxlint · Prettier · Docker · GitHub Actions
 
-> 🔗 **Live demo:** _coming soon_ — on the login page click **Head of sales** or **Manager** to try it without signing up.
+> 🔗 **Live demo: [nurbol-realty-crm.onrender.com](https://nurbol-realty-crm.onrender.com)** · **API docs: [/api/docs/](https://nurbol-realty-crm.onrender.com/api/docs/)**
+>
+> On the login page click **Head of sales** or **Manager** to try it without signing up.
 > It is a public demo: deleting is disabled and the data is recreated every time the server wakes up.
+> *Free hosting: the first load after a pause may take up to a minute.*
 
 ![Dashboard](docs/screenshots/dashboard.jpg)
 
