@@ -305,7 +305,9 @@ class AuditFixesTests(ApiTestCase):
                 response = APIClient().get('/deals/42')
                 self.assertEqual(response.status_code, 200)
                 self.assertEqual(response['Cache-Control'], 'no-cache')
-                response.close()
+                b''.join(
+                    response.streaming_content
+                )  # read the file to the end; the test client then finishes the request
 
 
 class SeedTests(ApiTestCase):
@@ -380,4 +382,6 @@ class SpaRoutingTests(APITestCase):
                 self.assertEqual(APIClient().get('/assets/OldPage-abc123.js').status_code, 404)
                 response = APIClient().get('/clients')
                 self.assertEqual(response.status_code, 200)
-                response.close()
+                b''.join(
+                    response.streaming_content
+                )  # read the file to the end; the test client then finishes the request
