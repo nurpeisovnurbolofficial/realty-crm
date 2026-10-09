@@ -7,7 +7,7 @@ tasks and a dashboard with commission analytics. Managers work with their own de
 
 **Backend:** Python 3.12 · Django 5.2 · Django REST Framework · JWT (httpOnly cookies) · PostgreSQL · OpenAPI/Swagger
 **Frontend:** React 19 · TypeScript (strict) · Vite · Tailwind CSS · TanStack Query · dnd-kit · Recharts · i18next (RU/EN)
-**Quality:** 70 backend tests on PostgreSQL (incl. N+1 query guards) · 23 frontend tests (Vitest + Testing Library) · ruff · oxlint · Prettier · Docker · GitHub Actions
+**Quality:** 73 backend tests on PostgreSQL (incl. N+1 query guards) · 25 frontend tests (Vitest + Testing Library) · ruff · oxlint · Prettier · Docker · GitHub Actions
 
 > 🔗 **Live demo: [nurbol-realty-crm.onrender.com](https://nurbol-realty-crm.onrender.com)** · **API docs: [/api/docs/](https://nurbol-realty-crm.onrender.com/api/docs/)**
 >
