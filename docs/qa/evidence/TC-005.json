@@ -1,0 +1,29 @@
+{
+  "case": {
+    "id": "TC-005",
+    "module": "Роли",
+    "name": "Менеджер открывает чужого клиента",
+    "priority": "P1",
+    "technique": "Классы эквивалентности",
+    "preconditions": "Изолированная локальная база; синтетические менеджеры A/B и руководитель; DEMO_MODE=False.",
+    "steps": "1. qa_manager_a: GET /api/clients/2/",
+    "expected": "HTTP 404.",
+    "actual": "[404, {\"detail\": \"No Client matches the given query.\"}]",
+    "status": "Passed",
+    "method": "HTTP API, cookie JWT + CSRF",
+    "evidence": "evidence/TC-005.json",
+    "bug": ""
+  },
+  "requests": [
+    {
+      "actor": "qa_manager_a",
+      "method": "GET",
+      "path": "/api/clients/2/",
+      "request": null,
+      "status": 404,
+      "response": {
+        "detail": "No Client matches the given query."
+      }
+    }
+  ]
+}

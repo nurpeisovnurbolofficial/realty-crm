@@ -1,0 +1,36 @@
+{
+  "case": {
+    "id": "TC-016",
+    "module": "Сделки",
+    "name": "Тип сделки не совпадает с объектом",
+    "priority": "P1",
+    "technique": "Классы эквивалентности",
+    "preconditions": "Изолированная локальная база; синтетические менеджеры A/B и руководитель; DEMO_MODE=False.",
+    "steps": "1. qa_manager_a: POST /api/deals/\n   JSON: {\"title\": \"QA mismatch\", \"client\": 1, \"property\": 3, \"amount\": 50000000, \"deal_type\": \"sale\"}",
+    "expected": "HTTP 400, code=property_type_mismatch.",
+    "actual": "[400, {\"code\": \"property_type_mismatch\", \"detail\": \"The property is listed for a different deal type (sale/rent).\"}]",
+    "status": "Passed",
+    "method": "HTTP API, cookie JWT + CSRF",
+    "evidence": "evidence/TC-016.json",
+    "bug": ""
+  },
+  "requests": [
+    {
+      "actor": "qa_manager_a",
+      "method": "POST",
+      "path": "/api/deals/",
+      "request": {
+        "title": "QA mismatch",
+        "client": 1,
+        "property": 3,
+        "amount": 50000000,
+        "deal_type": "sale"
+      },
+      "status": 400,
+      "response": {
+        "code": "property_type_mismatch",
+        "detail": "The property is listed for a different deal type (sale/rent)."
+      }
+    }
+  ]
+}

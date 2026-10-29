@@ -1,0 +1,34 @@
+{
+  "case": {
+    "id": "TC-013",
+    "module": "Клиенты",
+    "name": "Имя клиента длиной 151 символ",
+    "priority": "P1",
+    "technique": "Граничные значения: max+1",
+    "preconditions": "Изолированная локальная база; синтетические менеджеры A/B и руководитель; DEMO_MODE=False.",
+    "steps": "1. qa_manager_a: POST /api/clients/\n   JSON: {\"name\": \"NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN\", \"phone\": \"+77000000009\"}",
+    "expected": "HTTP 400 с ошибкой name.",
+    "actual": "[400, {\"name\": [\"Ensure this field has no more than 150 characters.\"]}]",
+    "status": "Passed",
+    "method": "HTTP API, cookie JWT + CSRF",
+    "evidence": "evidence/TC-013.json",
+    "bug": ""
+  },
+  "requests": [
+    {
+      "actor": "qa_manager_a",
+      "method": "POST",
+      "path": "/api/clients/",
+      "request": {
+        "name": "NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN",
+        "phone": "+77000000009"
+      },
+      "status": 400,
+      "response": {
+        "name": [
+          "Ensure this field has no more than 150 characters."
+        ]
+      }
+    }
+  ]
+}

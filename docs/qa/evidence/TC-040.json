@@ -1,0 +1,111 @@
+{
+  "case": {
+    "id": "TC-040",
+    "module": "Аналитика",
+    "name": "Рейтинг команды недоступен менеджеру",
+    "priority": "P1",
+    "technique": "Классы эквивалентности",
+    "preconditions": "Изолированная локальная база; синтетические менеджеры A/B и руководитель; DEMO_MODE=False.",
+    "steps": "1. qa_manager_a: GET /api/dashboard/",
+    "expected": "HTTP 200, leaderboard=null.",
+    "actual": "[200, {\"pipeline\": {\"count\": 10, \"amount\": 300300000, \"commission\": 57509000}, \"won_this_month\": {\"count\": 0, \"amount\": 0, \"commission\": 0}, \"conversion_rate\": null, \"avg_days_to_close\": null, \"by_stage\": [{\"stage\": \"new\", \"count\": 6, \"amount\": 200000000}, {\"stage\": \"contacted\", \"count\": 0, \"amount\": 0}, {\"stage\": \"viewing\", \"count\": 2, \"amount\": 50300000}, {\"stage\": \"negotiation\", \"count\": 0, \"amount\": 0}, {\"stage\": \"contract\", \"count\": 2, \"amount\": 50000000}], \"monthly\": [{\"month\": \"2026-05\", \"won_count\": 0, \"amount\": 0, \"commission\": 0}, {\"m",
+    "status": "Passed",
+    "method": "HTTP API, cookie JWT + CSRF",
+    "evidence": "evidence/TC-040.json",
+    "bug": ""
+  },
+  "requests": [
+    {
+      "actor": "qa_manager_a",
+      "method": "GET",
+      "path": "/api/dashboard/",
+      "request": null,
+      "status": 200,
+      "response": {
+        "pipeline": {
+          "count": 10,
+          "amount": 300300000,
+          "commission": 57509000
+        },
+        "won_this_month": {
+          "count": 0,
+          "amount": 0,
+          "commission": 0
+        },
+        "conversion_rate": null,
+        "avg_days_to_close": null,
+        "by_stage": [
+          {
+            "stage": "new",
+            "count": 6,
+            "amount": 200000000
+          },
+          {
+            "stage": "contacted",
+            "count": 0,
+            "amount": 0
+          },
+          {
+            "stage": "viewing",
+            "count": 2,
+            "amount": 50300000
+          },
+          {
+            "stage": "negotiation",
+            "count": 0,
+            "amount": 0
+          },
+          {
+            "stage": "contract",
+            "count": 2,
+            "amount": 50000000
+          }
+        ],
+        "monthly": [
+          {
+            "month": "2026-05",
+            "won_count": 0,
+            "amount": 0,
+            "commission": 0
+          },
+          {
+            "month": "2026-06",
+            "won_count": 0,
+            "amount": 0,
+            "commission": 0
+          },
+          {
+            "month": "2026-07",
+            "won_count": 0,
+            "amount": 0,
+            "commission": 0
+          },
+          {
+            "month": "2026-08",
+            "won_count": 0,
+            "amount": 0,
+            "commission": 0
+          },
+          {
+            "month": "2026-09",
+            "won_count": 0,
+            "amount": 0,
+            "commission": 0
+          },
+          {
+            "month": "2026-10",
+            "won_count": 0,
+            "amount": 0,
+            "commission": 0
+          }
+        ],
+        "lost_reasons": [],
+        "tasks": {
+          "overdue": 0,
+          "today": 0
+        },
+        "leaderboard": null
+      }
+    }
+  ]
+}

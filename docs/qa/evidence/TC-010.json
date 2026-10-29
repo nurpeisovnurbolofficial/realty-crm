@@ -1,0 +1,31 @@
+{
+  "case": {
+    "id": "TC-010",
+    "module": "Роли",
+    "name": "Менеджер изменяет чужой объект",
+    "priority": "P1",
+    "technique": "Классы эквивалентности",
+    "preconditions": "Изолированная локальная база; синтетические менеджеры A/B и руководитель; DEMO_MODE=False.",
+    "steps": "1. qa_manager_a: PATCH /api/properties/2/\n   JSON: {\"title\": \"QA unauthorized change\"}",
+    "expected": "HTTP 403.",
+    "actual": "[403, {\"detail\": \"You do not have permission to perform this action.\"}]",
+    "status": "Passed",
+    "method": "HTTP API, cookie JWT + CSRF",
+    "evidence": "evidence/TC-010.json",
+    "bug": ""
+  },
+  "requests": [
+    {
+      "actor": "qa_manager_a",
+      "method": "PATCH",
+      "path": "/api/properties/2/",
+      "request": {
+        "title": "QA unauthorized change"
+      },
+      "status": 403,
+      "response": {
+        "detail": "You do not have permission to perform this action."
+      }
+    }
+  ]
+}

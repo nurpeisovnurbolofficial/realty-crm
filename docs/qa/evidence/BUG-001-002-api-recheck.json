@@ -1,0 +1,350 @@
+[
+  {
+    "method": "POST",
+    "path": "/api/properties/",
+    "request": {
+      "title": "QA RECHECK 5b1b3e amount",
+      "kind": "apartment",
+      "deal_type": "sale",
+      "district": "esil",
+      "address": "Synthetic QA address",
+      "area": "65.0",
+      "price": 50000000
+    },
+    "status": 201,
+    "response": {
+      "id": 7,
+      "title": "QA RECHECK 5b1b3e amount",
+      "kind": "apartment",
+      "deal_type": "sale",
+      "district": "esil",
+      "address": "Synthetic QA address",
+      "rooms": null,
+      "area": "65.0",
+      "floor": null,
+      "price": 50000000,
+      "status": "available",
+      "description": "",
+      "agent": 2,
+      "agent_info": {
+        "id": 2,
+        "display_name": "qa_manager_a",
+        "role": "manager"
+      },
+      "can_edit": true,
+      "created_at": "2026-10-29T23:58:37.302684+05:00"
+    }
+  },
+  {
+    "method": "POST",
+    "path": "/api/deals/",
+    "request": {
+      "title": "QA RECHECK 5b1b3e amount",
+      "client": 1,
+      "property": 7,
+      "amount": 50000000,
+      "deal_type": "sale"
+    },
+    "status": 201,
+    "response": {
+      "id": 12,
+      "title": "QA RECHECK 5b1b3e amount",
+      "client": 1,
+      "client_info": {
+        "id": 1,
+        "name": "QA Client Alpha",
+        "phone": "+77000000001",
+        "kind": "person"
+      },
+      "property": 7,
+      "property_info": {
+        "id": 7,
+        "title": "QA RECHECK 5b1b3e amount",
+        "kind": "apartment",
+        "deal_type": "sale",
+        "district": "esil",
+        "price": 50000000,
+        "status": "available"
+      },
+      "deal_type": "sale",
+      "stage": "new",
+      "amount": 50000000,
+      "commission_percent": "3.00",
+      "commission": 1500000,
+      "owner": 2,
+      "owner_info": {
+        "id": 2,
+        "display_name": "qa_manager_a",
+        "role": "manager"
+      },
+      "lost_reason": "",
+      "lost_comment": "",
+      "expected_close_date": null,
+      "closed_at": null,
+      "created_at": "2026-10-29T23:58:37.338856+05:00",
+      "updated_at": "2026-10-29T23:58:37.338856+05:00"
+    }
+  },
+  {
+    "method": "POST",
+    "path": "/api/deals/12/move/",
+    "request": {
+      "stage": "contract"
+    },
+    "status": 200,
+    "response": {
+      "id": 12,
+      "title": "QA RECHECK 5b1b3e amount",
+      "client": 1,
+      "client_info": {
+        "id": 1,
+        "name": "QA Client Alpha",
+        "phone": "+77000000001",
+        "kind": "person"
+      },
+      "property": 7,
+      "property_info": {
+        "id": 7,
+        "title": "QA RECHECK 5b1b3e amount",
+        "kind": "apartment",
+        "deal_type": "sale",
+        "district": "esil",
+        "price": 50000000,
+        "status": "reserved"
+      },
+      "deal_type": "sale",
+      "stage": "contract",
+      "amount": 50000000,
+      "commission_percent": "3.00",
+      "commission": 1500000,
+      "owner": 2,
+      "owner_info": {
+        "id": 2,
+        "display_name": "qa_manager_a",
+        "role": "manager"
+      },
+      "lost_reason": "",
+      "lost_comment": "",
+      "expected_close_date": null,
+      "closed_at": null,
+      "created_at": "2026-10-29T23:58:37.338856+05:00",
+      "updated_at": "2026-10-29T23:58:37.372651+05:00"
+    }
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/deals/12/",
+    "request": {
+      "amount": 0
+    },
+    "status": 200,
+    "response": {
+      "id": 12,
+      "title": "QA RECHECK 5b1b3e amount",
+      "client": 1,
+      "client_info": {
+        "id": 1,
+        "name": "QA Client Alpha",
+        "phone": "+77000000001",
+        "kind": "person"
+      },
+      "property": 7,
+      "property_info": {
+        "id": 7,
+        "title": "QA RECHECK 5b1b3e amount",
+        "kind": "apartment",
+        "deal_type": "sale",
+        "district": "esil",
+        "price": 50000000,
+        "status": "reserved"
+      },
+      "deal_type": "sale",
+      "stage": "contract",
+      "amount": 0,
+      "commission_percent": "3.00",
+      "commission": 0,
+      "owner": 2,
+      "owner_info": {
+        "id": 2,
+        "display_name": "qa_manager_a",
+        "role": "manager"
+      },
+      "lost_reason": "",
+      "lost_comment": "",
+      "expected_close_date": null,
+      "closed_at": null,
+      "created_at": "2026-10-29T23:58:37.338856+05:00",
+      "updated_at": "2026-10-29T23:58:37.405111+05:00"
+    }
+  },
+  {
+    "method": "POST",
+    "path": "/api/properties/",
+    "request": {
+      "title": "QA RECHECK 5b1b3e property",
+      "kind": "apartment",
+      "deal_type": "sale",
+      "district": "esil",
+      "address": "Synthetic QA address",
+      "area": "65.0",
+      "price": 50000000
+    },
+    "status": 201,
+    "response": {
+      "id": 8,
+      "title": "QA RECHECK 5b1b3e property",
+      "kind": "apartment",
+      "deal_type": "sale",
+      "district": "esil",
+      "address": "Synthetic QA address",
+      "rooms": null,
+      "area": "65.0",
+      "floor": null,
+      "price": 50000000,
+      "status": "available",
+      "description": "",
+      "agent": 2,
+      "agent_info": {
+        "id": 2,
+        "display_name": "qa_manager_a",
+        "role": "manager"
+      },
+      "can_edit": true,
+      "created_at": "2026-10-29T23:58:37.414383+05:00"
+    }
+  },
+  {
+    "method": "POST",
+    "path": "/api/deals/",
+    "request": {
+      "title": "QA RECHECK 5b1b3e property",
+      "client": 1,
+      "property": 8,
+      "amount": 50000000,
+      "deal_type": "sale"
+    },
+    "status": 201,
+    "response": {
+      "id": 13,
+      "title": "QA RECHECK 5b1b3e property",
+      "client": 1,
+      "client_info": {
+        "id": 1,
+        "name": "QA Client Alpha",
+        "phone": "+77000000001",
+        "kind": "person"
+      },
+      "property": 8,
+      "property_info": {
+        "id": 8,
+        "title": "QA RECHECK 5b1b3e property",
+        "kind": "apartment",
+        "deal_type": "sale",
+        "district": "esil",
+        "price": 50000000,
+        "status": "available"
+      },
+      "deal_type": "sale",
+      "stage": "new",
+      "amount": 50000000,
+      "commission_percent": "3.00",
+      "commission": 1500000,
+      "owner": 2,
+      "owner_info": {
+        "id": 2,
+        "display_name": "qa_manager_a",
+        "role": "manager"
+      },
+      "lost_reason": "",
+      "lost_comment": "",
+      "expected_close_date": null,
+      "closed_at": null,
+      "created_at": "2026-10-29T23:58:37.436130+05:00",
+      "updated_at": "2026-10-29T23:58:37.436130+05:00"
+    }
+  },
+  {
+    "method": "POST",
+    "path": "/api/deals/13/move/",
+    "request": {
+      "stage": "viewing"
+    },
+    "status": 200,
+    "response": {
+      "id": 13,
+      "title": "QA RECHECK 5b1b3e property",
+      "client": 1,
+      "client_info": {
+        "id": 1,
+        "name": "QA Client Alpha",
+        "phone": "+77000000001",
+        "kind": "person"
+      },
+      "property": 8,
+      "property_info": {
+        "id": 8,
+        "title": "QA RECHECK 5b1b3e property",
+        "kind": "apartment",
+        "deal_type": "sale",
+        "district": "esil",
+        "price": 50000000,
+        "status": "available"
+      },
+      "deal_type": "sale",
+      "stage": "viewing",
+      "amount": 50000000,
+      "commission_percent": "3.00",
+      "commission": 1500000,
+      "owner": 2,
+      "owner_info": {
+        "id": 2,
+        "display_name": "qa_manager_a",
+        "role": "manager"
+      },
+      "lost_reason": "",
+      "lost_comment": "",
+      "expected_close_date": null,
+      "closed_at": null,
+      "created_at": "2026-10-29T23:58:37.436130+05:00",
+      "updated_at": "2026-10-29T23:58:37.447447+05:00"
+    }
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/deals/13/",
+    "request": {
+      "property": null
+    },
+    "status": 200,
+    "response": {
+      "id": 13,
+      "title": "QA RECHECK 5b1b3e property",
+      "client": 1,
+      "client_info": {
+        "id": 1,
+        "name": "QA Client Alpha",
+        "phone": "+77000000001",
+        "kind": "person"
+      },
+      "property": null,
+      "property_info": null,
+      "deal_type": "sale",
+      "stage": "viewing",
+      "amount": 50000000,
+      "commission_percent": "3.00",
+      "commission": 1500000,
+      "owner": 2,
+      "owner_info": {
+        "id": 2,
+        "display_name": "qa_manager_a",
+        "role": "manager"
+      },
+      "lost_reason": "",
+      "lost_comment": "",
+      "expected_close_date": null,
+      "closed_at": null,
+      "created_at": "2026-10-29T23:58:37.436130+05:00",
+      "updated_at": "2026-10-29T23:58:37.509381+05:00"
+    }
+  }
+]

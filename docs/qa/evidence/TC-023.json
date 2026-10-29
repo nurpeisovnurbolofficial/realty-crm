@@ -1,0 +1,32 @@
+{
+  "case": {
+    "id": "TC-023",
+    "module": "Этапы",
+    "name": "Вторая сделка на тот же объект",
+    "priority": "P1",
+    "technique": "Бизнес-правило; последовательный конфликт",
+    "preconditions": "Изолированная локальная база; синтетические менеджеры A/B и руководитель; DEMO_MODE=False.",
+    "steps": "1. qa_manager_a: POST /api/deals/9/move/\n   JSON: {\"stage\": \"contract\"}",
+    "expected": "Последовательная попытка второго договора: HTTP 400, property_unavailable.",
+    "actual": "[400, {\"code\": \"property_unavailable\", \"detail\": \"This property is already reserved, sold or rented.\"}]",
+    "status": "Passed",
+    "method": "HTTP API, cookie JWT + CSRF",
+    "evidence": "evidence/TC-023.json",
+    "bug": ""
+  },
+  "requests": [
+    {
+      "actor": "qa_manager_a",
+      "method": "POST",
+      "path": "/api/deals/9/move/",
+      "request": {
+        "stage": "contract"
+      },
+      "status": 400,
+      "response": {
+        "code": "property_unavailable",
+        "detail": "This property is already reserved, sold or rented."
+      }
+    }
+  ]
+}

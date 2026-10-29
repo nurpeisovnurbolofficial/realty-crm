@@ -1,0 +1,11 @@
+Протокол наблюдения TC-043
+Локальный прогон, начатый 29.10.2026. Ревизия b2c941a.
+
+Вход выполнен через форму под qa_manager_a. Открыт дашборд с приветствием qa_manager_a.
+
+Скриншот: TC-043-dashboard.png
+
+Исходный служебный дифф accessibility после наблюдения:
+Browser tab: 1, Title: "Дашборд · Realty CRM", URL: "http://127.0.0.1:8765/".
+There has been no change in the accessibility tree.
+The focused UI element is 1 AXWebArea Дашборд · Realty CRM, URL: 127.0.0.1:8765/

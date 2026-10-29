@@ -1,0 +1,48 @@
+{
+  "case": {
+    "id": "TC-042",
+    "module": "Вход",
+    "name": "Выход завершает сессию",
+    "priority": "P1",
+    "technique": "Классы эквивалентности",
+    "preconditions": "Изолированная локальная база; синтетические менеджеры A/B и руководитель; DEMO_MODE=False.",
+    "steps": "1. qa_manager_b: POST /api/auth/logout/\n   JSON: {}\n2. qa_manager_b: GET /api/auth/me/\n3. qa_manager_b: POST /api/auth/refresh/\n   JSON: {}",
+    "expected": "После POST logout: HTTP 204; GET me и POST refresh: HTTP 401.",
+    "actual": "[[204, null], [401, {\"detail\": \"Authentication credentials were not provided.\"}], [401, {\"code\": \"session_expired\", \"detail\": \"Your session has expired. Please log in again.\"}]]",
+    "status": "Passed",
+    "method": "HTTP API, cookie JWT + CSRF",
+    "evidence": "evidence/TC-042.json",
+    "bug": ""
+  },
+  "requests": [
+    {
+      "actor": "qa_manager_b",
+      "method": "POST",
+      "path": "/api/auth/logout/",
+      "request": {},
+      "status": 204,
+      "response": null
+    },
+    {
+      "actor": "qa_manager_b",
+      "method": "GET",
+      "path": "/api/auth/me/",
+      "request": null,
+      "status": 401,
+      "response": {
+        "detail": "Authentication credentials were not provided."
+      }
+    },
+    {
+      "actor": "qa_manager_b",
+      "method": "POST",
+      "path": "/api/auth/refresh/",
+      "request": {},
+      "status": 401,
+      "response": {
+        "code": "session_expired",
+        "detail": "Your session has expired. Please log in again."
+      }
+    }
+  ]
+}

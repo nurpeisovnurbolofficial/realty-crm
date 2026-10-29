@@ -1,0 +1,32 @@
+{
+  "case": {
+    "id": "TC-004",
+    "module": "Вход",
+    "name": "POST без CSRF-заголовка",
+    "priority": "P1",
+    "technique": "Классы эквивалентности",
+    "preconditions": "Изолированная локальная база; синтетические менеджеры A/B и руководитель; DEMO_MODE=False.",
+    "steps": "1. qa_manager_a: POST /api/clients/\n   JSON: {\"name\": \"QA CSRF\", \"phone\": \"+77000000009\"}",
+    "expected": "HTTP 403; клиент не создаётся.",
+    "actual": "[403, {\"detail\": \"CSRF Failed: CSRF token missing.\"}]",
+    "status": "Passed",
+    "method": "HTTP API, cookie JWT + CSRF",
+    "evidence": "evidence/TC-004.json",
+    "bug": ""
+  },
+  "requests": [
+    {
+      "actor": "qa_manager_a",
+      "method": "POST",
+      "path": "/api/clients/",
+      "request": {
+        "name": "QA CSRF",
+        "phone": "+77000000009"
+      },
+      "status": 403,
+      "response": {
+        "detail": "CSRF Failed: CSRF token missing."
+      }
+    }
+  ]
+}

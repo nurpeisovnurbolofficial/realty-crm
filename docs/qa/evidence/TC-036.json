@@ -1,0 +1,30 @@
+{
+  "case": {
+    "id": "TC-036",
+    "module": "Клиенты",
+    "name": "Удаление клиента со сделками",
+    "priority": "P1",
+    "technique": "Классы эквивалентности",
+    "preconditions": "Изолированная локальная база; синтетические менеджеры A/B и руководитель; DEMO_MODE=False.",
+    "steps": "1. qa_manager_a: DELETE /api/clients/1/",
+    "expected": "HTTP 400, code=client_has_deals.",
+    "actual": "[400, {\"code\": \"client_has_deals\", \"detail\": \"This client has deals and cannot be deleted.\"}]",
+    "status": "Passed",
+    "method": "HTTP API, cookie JWT + CSRF",
+    "evidence": "evidence/TC-036.json",
+    "bug": ""
+  },
+  "requests": [
+    {
+      "actor": "qa_manager_a",
+      "method": "DELETE",
+      "path": "/api/clients/1/",
+      "request": null,
+      "status": 400,
+      "response": {
+        "code": "client_has_deals",
+        "detail": "This client has deals and cannot be deleted."
+      }
+    }
+  ]
+}

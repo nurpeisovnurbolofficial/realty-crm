@@ -1,0 +1,33 @@
+{
+  "case": {
+    "id": "TC-002",
+    "module": "Вход",
+    "name": "Неверный пароль",
+    "priority": "P1",
+    "technique": "Классы эквивалентности",
+    "preconditions": "Изолированная локальная база; синтетические менеджеры A/B и руководитель; DEMO_MODE=False.",
+    "steps": "1. qa_manager_a: POST /api/auth/login/\n   JSON: {\"username\": \"qa_manager_a\", \"password\": \"wrong-local-fixture-password\"}",
+    "expected": "HTTP 400 и code=invalid_credentials.",
+    "actual": "[400, {\"code\": \"invalid_credentials\", \"detail\": \"Wrong username or password.\"}]",
+    "status": "Passed",
+    "method": "HTTP API, cookie JWT + CSRF",
+    "evidence": "evidence/TC-002.json",
+    "bug": ""
+  },
+  "requests": [
+    {
+      "actor": "qa_manager_a",
+      "method": "POST",
+      "path": "/api/auth/login/",
+      "request": {
+        "username": "qa_manager_a",
+        "password": "wrong-local-fixture-password"
+      },
+      "status": 400,
+      "response": {
+        "code": "invalid_credentials",
+        "detail": "Wrong username or password."
+      }
+    }
+  ]
+}

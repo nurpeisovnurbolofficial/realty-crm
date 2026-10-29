@@ -1,0 +1,29 @@
+{
+  "case": {
+    "id": "TC-001",
+    "module": "Вход",
+    "name": "Защищённый API без сессии",
+    "priority": "P1",
+    "technique": "Классы эквивалентности",
+    "preconditions": "Изолированная локальная база; синтетические менеджеры A/B и руководитель; DEMO_MODE=False.",
+    "steps": "1. anonymous: GET /api/clients/",
+    "expected": "HTTP 401, данные клиентов не возвращаются.",
+    "actual": "[401, {\"detail\": \"Authentication credentials were not provided.\"}]",
+    "status": "Passed",
+    "method": "HTTP API, cookie JWT + CSRF",
+    "evidence": "evidence/TC-001.json",
+    "bug": ""
+  },
+  "requests": [
+    {
+      "actor": "anonymous",
+      "method": "GET",
+      "path": "/api/clients/",
+      "request": null,
+      "status": 401,
+      "response": {
+        "detail": "Authentication credentials were not provided."
+      }
+    }
+  ]
+}

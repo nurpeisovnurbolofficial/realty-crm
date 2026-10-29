@@ -1,0 +1,58 @@
+{
+  "case": {
+    "id": "TC-025",
+    "module": "Этапы",
+    "name": "Удаление объекта после перехода на показ",
+    "priority": "P1",
+    "technique": "Переходы состояний + обход через редактирование",
+    "preconditions": "Изолированная локальная база; синтетические менеджеры A/B и руководитель; DEMO_MODE=False.",
+    "steps": "1. qa_manager_a: PATCH /api/deals/10/\n   JSON: {\"property\": null}",
+    "expected": "HTTP 400: этап viewing требует объекта. Привязка сохраняется.",
+    "actual": "[200, {\"id\": 10, \"title\": \"QA RUN Deal 8\", \"client\": 1, \"client_info\": {\"id\": 1, \"name\": \"QA Client Alpha\", \"phone\": \"+77000000001\", \"kind\": \"person\"}, \"property\": null, \"property_info\": null, \"deal_type\": \"sale\", \"stage\": \"viewing\", \"amount\": 50000000, \"commission_percent\": \"3.00\", \"commission\": 1500000, \"owner\": 2, \"owner_info\": {\"id\": 2, \"display_name\": \"qa_manager_a\", \"role\": \"manager\"}, \"lost_reason\": \"\", \"lost_comment\": \"\", \"expected_close_date\": null, \"closed_at\": null, \"created_at\": \"2026-10-29T23:45:13.496030+05:00\", \"updated_at\": \"202",
+    "status": "Failed",
+    "method": "HTTP API, cookie JWT + CSRF",
+    "evidence": "evidence/TC-025.json",
+    "bug": "BUG-002"
+  },
+  "requests": [
+    {
+      "actor": "qa_manager_a",
+      "method": "PATCH",
+      "path": "/api/deals/10/",
+      "request": {
+        "property": null
+      },
+      "status": 200,
+      "response": {
+        "id": 10,
+        "title": "QA RUN Deal 8",
+        "client": 1,
+        "client_info": {
+          "id": 1,
+          "name": "QA Client Alpha",
+          "phone": "+77000000001",
+          "kind": "person"
+        },
+        "property": null,
+        "property_info": null,
+        "deal_type": "sale",
+        "stage": "viewing",
+        "amount": 50000000,
+        "commission_percent": "3.00",
+        "commission": 1500000,
+        "owner": 2,
+        "owner_info": {
+          "id": 2,
+          "display_name": "qa_manager_a",
+          "role": "manager"
+        },
+        "lost_reason": "",
+        "lost_comment": "",
+        "expected_close_date": null,
+        "closed_at": null,
+        "created_at": "2026-10-29T23:45:13.496030+05:00",
+        "updated_at": "2026-10-29T23:45:13.549131+05:00"
+      }
+    }
+  ]
+}

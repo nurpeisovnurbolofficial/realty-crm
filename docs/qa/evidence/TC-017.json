@@ -1,0 +1,32 @@
+{
+  "case": {
+    "id": "TC-017",
+    "module": "Этапы",
+    "name": "Переход на показ без объекта",
+    "priority": "P1",
+    "technique": "Переходы состояний",
+    "preconditions": "Изолированная локальная база; синтетические менеджеры A/B и руководитель; DEMO_MODE=False.",
+    "steps": "1. qa_manager_a: POST /api/deals/6/move/\n   JSON: {\"stage\": \"viewing\"}",
+    "expected": "HTTP 400, code=property_required.",
+    "actual": "[400, {\"code\": \"property_required\", \"detail\": \"Attach a property before moving the deal to this stage.\"}]",
+    "status": "Passed",
+    "method": "HTTP API, cookie JWT + CSRF",
+    "evidence": "evidence/TC-017.json",
+    "bug": ""
+  },
+  "requests": [
+    {
+      "actor": "qa_manager_a",
+      "method": "POST",
+      "path": "/api/deals/6/move/",
+      "request": {
+        "stage": "viewing"
+      },
+      "status": 400,
+      "response": {
+        "code": "property_required",
+        "detail": "Attach a property before moving the deal to this stage."
+      }
+    }
+  ]
+}

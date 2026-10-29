@@ -1,0 +1,36 @@
+{
+  "case": {
+    "id": "TC-003",
+    "module": "Вход",
+    "name": "Текущий пользователь после входа",
+    "priority": "P1",
+    "technique": "Классы эквивалентности",
+    "preconditions": "Изолированная локальная база; синтетические менеджеры A/B и руководитель; DEMO_MODE=False.",
+    "steps": "1. qa_manager_a: GET /api/auth/me/",
+    "expected": "HTTP 200, username=qa_manager_a и role=manager.",
+    "actual": "[200, {\"id\": 2, \"username\": \"qa_manager_a\", \"first_name\": \"qa_manager_a\", \"last_name\": \"\", \"display_name\": \"qa_manager_a\", \"role\": \"manager\", \"is_head\": false, \"demo_mode\": false}]",
+    "status": "Passed",
+    "method": "HTTP API, cookie JWT + CSRF",
+    "evidence": "evidence/TC-003.json",
+    "bug": ""
+  },
+  "requests": [
+    {
+      "actor": "qa_manager_a",
+      "method": "GET",
+      "path": "/api/auth/me/",
+      "request": null,
+      "status": 200,
+      "response": {
+        "id": 2,
+        "username": "qa_manager_a",
+        "first_name": "qa_manager_a",
+        "last_name": "",
+        "display_name": "qa_manager_a",
+        "role": "manager",
+        "is_head": false,
+        "demo_mode": false
+      }
+    }
+  ]
+}

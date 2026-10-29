@@ -1,0 +1,40 @@
+{
+  "case": {
+    "id": "TC-032",
+    "module": "История",
+    "name": "Заметка с пробелами по краям",
+    "priority": "P1",
+    "technique": "Классы эквивалентности",
+    "preconditions": "Изолированная локальная база; синтетические менеджеры A/B и руководитель; DEMO_MODE=False.",
+    "steps": "1. qa_manager_a: POST /api/deals/6/activities/\n   JSON: {\"text\": \"  QA note  \"}",
+    "expected": "HTTP 201, text=QA note.",
+    "actual": "[201, {\"id\": 17, \"kind\": \"note\", \"text\": \"QA note\", \"data\": {}, \"author\": {\"id\": 2, \"display_name\": \"qa_manager_a\", \"role\": \"manager\"}, \"created_at\": \"2026-10-29T23:45:13.735878+05:00\"}]",
+    "status": "Passed",
+    "method": "HTTP API, cookie JWT + CSRF",
+    "evidence": "evidence/TC-032.json",
+    "bug": ""
+  },
+  "requests": [
+    {
+      "actor": "qa_manager_a",
+      "method": "POST",
+      "path": "/api/deals/6/activities/",
+      "request": {
+        "text": "  QA note  "
+      },
+      "status": 201,
+      "response": {
+        "id": 17,
+        "kind": "note",
+        "text": "QA note",
+        "data": {},
+        "author": {
+          "id": 2,
+          "display_name": "qa_manager_a",
+          "role": "manager"
+        },
+        "created_at": "2026-10-29T23:45:13.735878+05:00"
+      }
+    }
+  ]
+}

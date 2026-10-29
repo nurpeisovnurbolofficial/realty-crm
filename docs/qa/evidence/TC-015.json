@@ -1,0 +1,36 @@
+{
+  "case": {
+    "id": "TC-015",
+    "module": "Клиенты",
+    "name": "Название компании длиной 151 символ",
+    "priority": "P1",
+    "technique": "Граничные значения: max+1",
+    "preconditions": "Изолированная локальная база; синтетические менеджеры A/B и руководитель; DEMO_MODE=False.",
+    "steps": "1. qa_manager_a: POST /api/clients/\n   JSON: {\"name\": \"QA RUN Client\", \"phone\": \"+77000000009\", \"kind\": \"company\", \"company_name\": \"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\"}",
+    "expected": "API: HTTP 400 с ошибкой company_name. Отображение ошибки проверяется в TC-044.",
+    "actual": "[400, {\"company_name\": [\"Ensure this field has no more than 150 characters.\"]}]",
+    "status": "Passed",
+    "method": "HTTP API, cookie JWT + CSRF",
+    "evidence": "evidence/TC-015.json",
+    "bug": ""
+  },
+  "requests": [
+    {
+      "actor": "qa_manager_a",
+      "method": "POST",
+      "path": "/api/clients/",
+      "request": {
+        "name": "QA RUN Client",
+        "phone": "+77000000009",
+        "kind": "company",
+        "company_name": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+      },
+      "status": 400,
+      "response": {
+        "company_name": [
+          "Ensure this field has no more than 150 characters."
+        ]
+      }
+    }
+  ]
+}

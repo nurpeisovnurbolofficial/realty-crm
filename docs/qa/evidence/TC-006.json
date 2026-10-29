@@ -1,0 +1,29 @@
+{
+  "case": {
+    "id": "TC-006",
+    "module": "Роли",
+    "name": "Менеджер открывает чужую сделку",
+    "priority": "P1",
+    "technique": "Классы эквивалентности",
+    "preconditions": "Изолированная локальная база; синтетические менеджеры A/B и руководитель; DEMO_MODE=False.",
+    "steps": "1. qa_manager_a: GET /api/deals/2/",
+    "expected": "HTTP 404.",
+    "actual": "[404, {\"detail\": \"No Deal matches the given query.\"}]",
+    "status": "Passed",
+    "method": "HTTP API, cookie JWT + CSRF",
+    "evidence": "evidence/TC-006.json",
+    "bug": ""
+  },
+  "requests": [
+    {
+      "actor": "qa_manager_a",
+      "method": "GET",
+      "path": "/api/deals/2/",
+      "request": null,
+      "status": 404,
+      "response": {
+        "detail": "No Deal matches the given query."
+      }
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "case": {
+    "id": "TC-033",
+    "module": "Задачи",
+    "name": "Завершение задачи",
+    "priority": "P1",
+    "technique": "Переходы состояний",
+    "preconditions": "Изолированная локальная база; синтетические менеджеры A/B и руководитель; DEMO_MODE=False.",
+    "steps": "1. qa_manager_a: POST /api/tasks/2/complete/\n   JSON: {}",
+    "expected": "HTTP 200, is_done=true, completed_at заполнено.",
+    "actual": "[200, {\"id\": 2, \"title\": \"QA RUN Task\", \"deal\": 6, \"deal_title\": \"QA RUN Deal 1\", \"assignee\": 2, \"assignee_info\": {\"id\": 2, \"display_name\": \"qa_manager_a\", \"role\": \"manager\"}, \"due_at\": \"2026-11-03T09:00:00+05:00\", \"is_done\": true, \"is_overdue\": false, \"completed_at\": \"2026-10-29T23:45:13.774044+05:00\", \"created_at\": \"2026-10-29T23:45:13.759794+05:00\"}]",
+    "status": "Passed",
+    "method": "HTTP API, cookie JWT + CSRF",
+    "evidence": "evidence/TC-033.json",
+    "bug": ""
+  },
+  "requests": [
+    {
+      "actor": "qa_manager_a",
+      "method": "POST",
+      "path": "/api/tasks/2/complete/",
+      "request": {},
+      "status": 200,
+      "response": {
+        "id": 2,
+        "title": "QA RUN Task",
+        "deal": 6,
+        "deal_title": "QA RUN Deal 1",
+        "assignee": 2,
+        "assignee_info": {
+          "id": 2,
+          "display_name": "qa_manager_a",
+          "role": "manager"
+        },
+        "due_at": "2026-11-03T09:00:00+05:00",
+        "is_done": true,
+        "is_overdue": false,
+        "completed_at": "2026-10-29T23:45:13.774044+05:00",
+        "created_at": "2026-10-29T23:45:13.759794+05:00"
+      }
+    }
+  ]
+}

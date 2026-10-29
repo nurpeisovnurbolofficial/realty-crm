@@ -1,0 +1,11 @@
+Протокол наблюдения TC-044
+Локальный прогон, начатый 29.10.2026. Ревизия b2c941a.
+
+Компания: 151 буква A. После сохранения форма остаётся открытой. Видно «Проверьте поля, отмеченные красным». Сообщения длины и красной рамки у поля «Компания» нет.
+
+Скриншот: BUG-003-repeat.png
+
+Исходный служебный дифф accessibility после наблюдения:
+Browser tab: 1, Title: "Клиенты · Realty CRM", URL: "http://127.0.0.1:8765/clients".
+There has been no change in the accessibility tree.
+The focused UI element is 1 AXWebArea Клиенты · Realty CRM, URL: 127.0.0.1:8765/clients

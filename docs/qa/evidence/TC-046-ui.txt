@@ -1,0 +1,11 @@
+Протокол наблюдения TC-046
+Локальный прогон, начатый 29.10.2026. Ревизия b2c941a.
+
+После выбора «Объект не выбран» и сохранения сделка остаётся на этапе «Показ». В блоке объекта отображается «Объект не выбран».
+
+Скриншот: BUG-002-full-page.png
+
+Исходный служебный дифф accessibility после наблюдения:
+Browser tab: 1, Title: "QA Viewing Property Mutation · Realty CRM", URL: "http://127.0.0.1:8765/deals/5".
+There has been no change in the accessibility tree.
+The focused UI element is 1 AXWebArea QA Viewing Property Mutation · Realty CRM, URL: 127.0.0.1:8765/deals/5

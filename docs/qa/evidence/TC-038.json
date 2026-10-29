@@ -1,0 +1,51 @@
+{
+  "case": {
+    "id": "TC-038",
+    "module": "Списки",
+    "name": "Пагинация клиентов",
+    "priority": "P1",
+    "technique": "Классы эквивалентности",
+    "preconditions": "Изолированная локальная база; синтетические менеджеры A/B и руководитель; DEMO_MODE=False.",
+    "steps": "1. qa_manager_a: GET /api/clients/?page_size=1",
+    "expected": "HTTP 200, один элемент results и ссылка next.",
+    "actual": "[200, {\"count\": 2, \"next\": \"http://127.0.0.1:8765/api/clients/?page=2&page_size=1\", \"previous\": null, \"results\": [{\"id\": 1, \"name\": \"QA Client Alpha\", \"kind\": \"person\", \"company_name\": \"\", \"phone\": \"+77000000001\", \"email\": \"\", \"source\": \"website\", \"notes\": \"\", \"owner\": 2, \"owner_info\": {\"id\": 2, \"display_name\": \"qa_manager_a\", \"role\": \"manager\"}, \"deals_count\": 10, \"created_at\": \"2026-10-29T23:41:04.571880+05:00\"}]}]",
+    "status": "Passed",
+    "method": "HTTP API, cookie JWT + CSRF",
+    "evidence": "evidence/TC-038.json",
+    "bug": ""
+  },
+  "requests": [
+    {
+      "actor": "qa_manager_a",
+      "method": "GET",
+      "path": "/api/clients/?page_size=1",
+      "request": null,
+      "status": 200,
+      "response": {
+        "count": 2,
+        "next": "http://127.0.0.1:8765/api/clients/?page=2&page_size=1",
+        "previous": null,
+        "results": [
+          {
+            "id": 1,
+            "name": "QA Client Alpha",
+            "kind": "person",
+            "company_name": "",
+            "phone": "+77000000001",
+            "email": "",
+            "source": "website",
+            "notes": "",
+            "owner": 2,
+            "owner_info": {
+              "id": 2,
+              "display_name": "qa_manager_a",
+              "role": "manager"
+            },
+            "deals_count": 10,
+            "created_at": "2026-10-29T23:41:04.571880+05:00"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "case": {
+    "id": "TC-007",
+    "module": "Роли",
+    "name": "Менеджер назначает клиента другому менеджеру",
+    "priority": "P1",
+    "technique": "Классы эквивалентности",
+    "preconditions": "Изолированная локальная база; синтетические менеджеры A/B и руководитель; DEMO_MODE=False.",
+    "steps": "1. qa_manager_a: POST /api/clients/\n   JSON: {\"name\": \"QA RUN Client\", \"phone\": \"+77000000009\", \"owner\": 3}",
+    "expected": "HTTP 400 с ошибкой owner.",
+    "actual": "[400, {\"owner\": [\"Only the head of sales can assign other people.\"]}]",
+    "status": "Passed",
+    "method": "HTTP API, cookie JWT + CSRF",
+    "evidence": "evidence/TC-007.json",
+    "bug": ""
+  },
+  "requests": [
+    {
+      "actor": "qa_manager_a",
+      "method": "POST",
+      "path": "/api/clients/",
+      "request": {
+        "name": "QA RUN Client",
+        "phone": "+77000000009",
+        "owner": 3
+      },
+      "status": 400,
+      "response": {
+        "owner": [
+          "Only the head of sales can assign other people."
+        ]
+      }
+    }
+  ]
+}

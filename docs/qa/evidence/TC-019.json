@@ -1,0 +1,33 @@
+{
+  "case": {
+    "id": "TC-019",
+    "module": "Сделки",
+    "name": "Комиссия 100.01%",
+    "priority": "P1",
+    "technique": "Граничные значения: max+0.01",
+    "preconditions": "Изолированная локальная база; синтетические менеджеры A/B и руководитель; DEMO_MODE=False.",
+    "steps": "1. qa_manager_a: PATCH /api/deals/6/\n   JSON: {\"commission_percent\": \"100.01\"}",
+    "expected": "HTTP 400 с ошибкой commission_percent.",
+    "actual": "[400, {\"commission_percent\": [\"Ensure this value is less than or equal to 100.\"]}]",
+    "status": "Passed",
+    "method": "HTTP API, cookie JWT + CSRF",
+    "evidence": "evidence/TC-019.json",
+    "bug": ""
+  },
+  "requests": [
+    {
+      "actor": "qa_manager_a",
+      "method": "PATCH",
+      "path": "/api/deals/6/",
+      "request": {
+        "commission_percent": "100.01"
+      },
+      "status": 400,
+      "response": {
+        "commission_percent": [
+          "Ensure this value is less than or equal to 100."
+        ]
+      }
+    }
+  ]
+}

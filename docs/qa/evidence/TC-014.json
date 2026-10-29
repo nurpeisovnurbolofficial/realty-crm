@@ -1,0 +1,35 @@
+{
+  "case": {
+    "id": "TC-014",
+    "module": "Клиенты",
+    "name": "Некорректный email",
+    "priority": "P1",
+    "technique": "Классы эквивалентности",
+    "preconditions": "Изолированная локальная база; синтетические менеджеры A/B и руководитель; DEMO_MODE=False.",
+    "steps": "1. qa_manager_a: POST /api/clients/\n   JSON: {\"name\": \"QA RUN Client\", \"phone\": \"+77000000009\", \"email\": \"invalid-email\"}",
+    "expected": "HTTP 400 с ошибкой email.",
+    "actual": "[400, {\"email\": [\"Enter a valid email address.\"]}]",
+    "status": "Passed",
+    "method": "HTTP API, cookie JWT + CSRF",
+    "evidence": "evidence/TC-014.json",
+    "bug": ""
+  },
+  "requests": [
+    {
+      "actor": "qa_manager_a",
+      "method": "POST",
+      "path": "/api/clients/",
+      "request": {
+        "name": "QA RUN Client",
+        "phone": "+77000000009",
+        "email": "invalid-email"
+      },
+      "status": 400,
+      "response": {
+        "email": [
+          "Enter a valid email address."
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+__pycache__/
+*.py[cod]
+qa.sqlite3
+qa.sqlite3-*
+fixture.json
+recheck-results.json
+staticfiles/

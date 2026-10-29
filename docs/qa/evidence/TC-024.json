@@ -1,0 +1,66 @@
+{
+  "case": {
+    "id": "TC-024",
+    "module": "Этапы",
+    "name": "Обнуление суммы действующего договора",
+    "priority": "P1",
+    "technique": "Переходы состояний + обход через редактирование",
+    "preconditions": "Изолированная локальная база; синтетические менеджеры A/B и руководитель; DEMO_MODE=False.",
+    "steps": "1. qa_manager_a: PATCH /api/deals/8/\n   JSON: {\"amount\": 0}",
+    "expected": "HTTP 400: нельзя сохранить amount=0 при stage=contract. Исходная сумма остаётся неизменной.",
+    "actual": "[200, {\"id\": 8, \"title\": \"QA RUN Deal 5\", \"client\": 1, \"client_info\": {\"id\": 1, \"name\": \"QA Client Alpha\", \"phone\": \"+77000000001\", \"kind\": \"person\"}, \"property\": 5, \"property_info\": {\"id\": 5, \"title\": \"QA RUN Property 4\", \"kind\": \"apartment\", \"deal_type\": \"sale\", \"district\": \"esil\", \"price\": 50000000, \"status\": \"reserved\"}, \"deal_type\": \"sale\", \"stage\": \"contract\", \"amount\": 0, \"commission_percent\": \"3.00\", \"commission\": 0, \"owner\": 2, \"owner_info\": {\"id\": 2, \"display_name\": \"qa_manager_a\", \"role\": \"manager\"}, \"lost_reason\": \"\", \"lost_comment\"",
+    "status": "Failed",
+    "method": "HTTP API, cookie JWT + CSRF",
+    "evidence": "evidence/TC-024.json",
+    "bug": "BUG-001"
+  },
+  "requests": [
+    {
+      "actor": "qa_manager_a",
+      "method": "PATCH",
+      "path": "/api/deals/8/",
+      "request": {
+        "amount": 0
+      },
+      "status": 200,
+      "response": {
+        "id": 8,
+        "title": "QA RUN Deal 5",
+        "client": 1,
+        "client_info": {
+          "id": 1,
+          "name": "QA Client Alpha",
+          "phone": "+77000000001",
+          "kind": "person"
+        },
+        "property": 5,
+        "property_info": {
+          "id": 5,
+          "title": "QA RUN Property 4",
+          "kind": "apartment",
+          "deal_type": "sale",
+          "district": "esil",
+          "price": 50000000,
+          "status": "reserved"
+        },
+        "deal_type": "sale",
+        "stage": "contract",
+        "amount": 0,
+        "commission_percent": "3.00",
+        "commission": 0,
+        "owner": 2,
+        "owner_info": {
+          "id": 2,
+          "display_name": "qa_manager_a",
+          "role": "manager"
+        },
+        "lost_reason": "",
+        "lost_comment": "",
+        "expected_close_date": null,
+        "closed_at": null,
+        "created_at": "2026-10-29T23:45:13.345589+05:00",
+        "updated_at": "2026-10-29T23:45:13.468567+05:00"
+      }
+    }
+  ]
+}

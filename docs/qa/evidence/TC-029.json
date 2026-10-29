@@ -1,0 +1,32 @@
+{
+  "case": {
+    "id": "TC-029",
+    "module": "Роли",
+    "name": "Менеджер возвращает закрытую сделку",
+    "priority": "P1",
+    "technique": "Роли + переходы состояний",
+    "preconditions": "Изолированная локальная база; синтетические менеджеры A/B и руководитель; DEMO_MODE=False.",
+    "steps": "1. qa_manager_a: POST /api/deals/11/move/\n   JSON: {\"stage\": \"new\"}",
+    "expected": "HTTP 400, reopen_requires_head.",
+    "actual": "[400, {\"code\": \"reopen_requires_head\", \"detail\": \"Only the head of sales can change a closed deal.\"}]",
+    "status": "Passed",
+    "method": "HTTP API, cookie JWT + CSRF",
+    "evidence": "evidence/TC-029.json",
+    "bug": ""
+  },
+  "requests": [
+    {
+      "actor": "qa_manager_a",
+      "method": "POST",
+      "path": "/api/deals/11/move/",
+      "request": {
+        "stage": "new"
+      },
+      "status": 400,
+      "response": {
+        "code": "reopen_requires_head",
+        "detail": "Only the head of sales can change a closed deal."
+      }
+    }
+  ]
+}

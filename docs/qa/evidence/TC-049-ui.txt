@@ -1,0 +1,9 @@
+Протокол наблюдения TC-049
+Локальный прогон, начатый 29.10.2026. Ревизия b2c941a.
+
+Открыта форма через Edit, затем нажат Escape. Форма закрылась, фокус вернулся на Edit. Отдельное DOM-наблюдение в прогоне вернуло focused="Edit".
+
+Исходный служебный дифф accessibility после наблюдения:
+Browser tab: 1, Title: "QA Deal Without Property · Realty CRM", URL: "http://127.0.0.1:8765/deals/3".
+There has been no change in the accessibility tree.
+The focused UI element is 22 button Edit

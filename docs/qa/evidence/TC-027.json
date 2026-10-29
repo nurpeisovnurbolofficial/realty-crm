@@ -1,0 +1,34 @@
+{
+  "case": {
+    "id": "TC-027",
+    "module": "Этапы",
+    "name": "Причина Другое без комментария",
+    "priority": "P1",
+    "technique": "Таблица решений",
+    "preconditions": "Изолированная локальная база; синтетические менеджеры A/B и руководитель; DEMO_MODE=False.",
+    "steps": "1. qa_manager_a: POST /api/deals/11/move/\n   JSON: {\"stage\": \"lost\", \"lost_reason\": \"other\", \"lost_comment\": \"   \"}",
+    "expected": "HTTP 400, lost_comment_required.",
+    "actual": "[400, {\"code\": \"lost_comment_required\", \"detail\": \"Describe the reason in a comment.\"}]",
+    "status": "Passed",
+    "method": "HTTP API, cookie JWT + CSRF",
+    "evidence": "evidence/TC-027.json",
+    "bug": ""
+  },
+  "requests": [
+    {
+      "actor": "qa_manager_a",
+      "method": "POST",
+      "path": "/api/deals/11/move/",
+      "request": {
+        "stage": "lost",
+        "lost_reason": "other",
+        "lost_comment": "   "
+      },
+      "status": 400,
+      "response": {
+        "code": "lost_comment_required",
+        "detail": "Describe the reason in a comment."
+      }
+    }
+  ]
+}

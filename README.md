@@ -9,6 +9,8 @@ tasks and a dashboard with commission analytics. Managers work with their own de
 **Frontend:** React 19 · TypeScript (strict) · Vite · Tailwind CSS · TanStack Query · dnd-kit · Recharts · i18next (RU/EN)
 **Quality:** 73 backend tests on PostgreSQL (incl. N+1 query guards) · 25 frontend tests (Vitest + Testing Library) · ruff · oxlint · Prettier · Docker · GitHub Actions
 
+**QA portfolio:** [checklists, test cases, and 3 reproduced defects](docs/qa/README.en.md) · [PDF report](docs/qa/Realty_CRM_QA_Report.pdf) · [Excel workbook](docs/qa/Realty_CRM_QA_Portfolio.xlsx). Local SQLite snapshot: 56 scenarios, 51 executed; PostgreSQL concurrency is not included.
+
 > 🔗 **Live demo: [nurbol-realty-crm.onrender.com](https://nurbol-realty-crm.onrender.com)** · **API docs: [/api/docs/](https://nurbol-realty-crm.onrender.com/api/docs/)**
 >
 > On the login page click **Head of sales** or **Manager** to try it without signing up.

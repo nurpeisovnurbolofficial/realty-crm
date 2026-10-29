@@ -1,0 +1,35 @@
+{
+  "case": {
+    "id": "TC-035",
+    "module": "Роли",
+    "name": "Менеджер назначает задачу коллеге",
+    "priority": "P1",
+    "technique": "Классы эквивалентности",
+    "preconditions": "Изолированная локальная база; синтетические менеджеры A/B и руководитель; DEMO_MODE=False.",
+    "steps": "1. qa_manager_a: POST /api/tasks/\n   JSON: {\"title\": \"QA forbidden assign\", \"assignee\": 3, \"due_at\": \"2026-11-03T09:00:00+05:00\"}",
+    "expected": "HTTP 400 с ошибкой assignee.",
+    "actual": "[400, {\"assignee\": [\"Only the head of sales can assign other people.\"]}]",
+    "status": "Passed",
+    "method": "HTTP API, cookie JWT + CSRF",
+    "evidence": "evidence/TC-035.json",
+    "bug": ""
+  },
+  "requests": [
+    {
+      "actor": "qa_manager_a",
+      "method": "POST",
+      "path": "/api/tasks/",
+      "request": {
+        "title": "QA forbidden assign",
+        "assignee": 3,
+        "due_at": "2026-11-03T09:00:00+05:00"
+      },
+      "status": 400,
+      "response": {
+        "assignee": [
+          "Only the head of sales can assign other people."
+        ]
+      }
+    }
+  ]
+}

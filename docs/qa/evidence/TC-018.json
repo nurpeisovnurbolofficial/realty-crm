@@ -1,0 +1,32 @@
+{
+  "case": {
+    "id": "TC-018",
+    "module": "Этапы",
+    "name": "Переход на договор с нулевой суммой",
+    "priority": "P1",
+    "technique": "Переходы состояний + граница 0",
+    "preconditions": "Изолированная локальная база; синтетические менеджеры A/B и руководитель; DEMO_MODE=False.",
+    "steps": "1. qa_manager_a: POST /api/deals/7/move/\n   JSON: {\"stage\": \"contract\"}",
+    "expected": "HTTP 400, code=amount_required.",
+    "actual": "[400, {\"code\": \"amount_required\", \"detail\": \"Set the deal amount before the contract stage.\"}]",
+    "status": "Passed",
+    "method": "HTTP API, cookie JWT + CSRF",
+    "evidence": "evidence/TC-018.json",
+    "bug": ""
+  },
+  "requests": [
+    {
+      "actor": "qa_manager_a",
+      "method": "POST",
+      "path": "/api/deals/7/move/",
+      "request": {
+        "stage": "contract"
+      },
+      "status": 400,
+      "response": {
+        "code": "amount_required",
+        "detail": "Set the deal amount before the contract stage."
+      }
+    }
+  ]
+}

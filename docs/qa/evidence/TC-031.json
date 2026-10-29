@@ -1,0 +1,33 @@
+{
+  "case": {
+    "id": "TC-031",
+    "module": "История",
+    "name": "Пустая заметка",
+    "priority": "P1",
+    "technique": "Классы эквивалентности",
+    "preconditions": "Изолированная локальная база; синтетические менеджеры A/B и руководитель; DEMO_MODE=False.",
+    "steps": "1. qa_manager_a: POST /api/deals/6/activities/\n   JSON: {\"text\": \"   \"}",
+    "expected": "HTTP 400, заметка не создаётся.",
+    "actual": "[400, {\"text\": [\"This field may not be blank.\"]}]",
+    "status": "Passed",
+    "method": "HTTP API, cookie JWT + CSRF",
+    "evidence": "evidence/TC-031.json",
+    "bug": ""
+  },
+  "requests": [
+    {
+      "actor": "qa_manager_a",
+      "method": "POST",
+      "path": "/api/deals/6/activities/",
+      "request": {
+        "text": "   "
+      },
+      "status": 400,
+      "response": {
+        "text": [
+          "This field may not be blank."
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "case": {
+    "id": "TC-011",
+    "module": "Клиенты",
+    "name": "Пустое имя клиента",
+    "priority": "P1",
+    "technique": "Классы эквивалентности",
+    "preconditions": "Изолированная локальная база; синтетические менеджеры A/B и руководитель; DEMO_MODE=False.",
+    "steps": "1. qa_manager_a: POST /api/clients/\n   JSON: {\"name\": \"   \", \"phone\": \"+77000000009\"}",
+    "expected": "HTTP 400 с ошибкой name.",
+    "actual": "[400, {\"name\": [\"This field may not be blank.\"]}]",
+    "status": "Passed",
+    "method": "HTTP API, cookie JWT + CSRF",
+    "evidence": "evidence/TC-011.json",
+    "bug": ""
+  },
+  "requests": [
+    {
+      "actor": "qa_manager_a",
+      "method": "POST",
+      "path": "/api/clients/",
+      "request": {
+        "name": "   ",
+        "phone": "+77000000009"
+      },
+      "status": 400,
+      "response": {
+        "name": [
+          "This field may not be blank."
+        ]
+      }
+    }
+  ]
+}
